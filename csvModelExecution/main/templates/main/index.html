@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSVModelExecution</title>
+</head>
+<body>
+  <h1>CSVによるモデル実行システム</h1>
+  <form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="drop-zone" style="border: 1px solid; padding: 30px; width: 50%;">
+      <p>ファイルをドラッグ＆ドロップもしくは</p>
+      <input type="file" multiple="multiple" name="file" id="file-input">
+      <input type="submit" style="margin-top: 50px" value="UPLOAD">
+    </div>
+  </form>
+
+  <h3 style='margin-top: 50px'>アップロード済みファイル</h3>
+  {% for file in file_list %}
+    <p>{{file}}</p>
+  {% endfor %}
+
+  <form method="post" action="insert" id="insert" style='margin-top: 50px'>
+    {% csrf_token %}
+    <p><input type="submit" value="DB登録"></p>
+  </form>
+
+  <form method="post" action="delete" id="delete">
+    {% csrf_token %}
+    <p><input type="submit" value="DBデータ削除"></p>
+  </form>
+
+
+  <h3 style='margin-top: 50px'>結合データファイルの作成</h3>
+  <p>結合形式：<select name="join" form="join">
+    <option value="inner-join">INNER JOIN</option>
+    <option value="left-right-outer-join">LEFT/RIGHT OUTER JOIN</option>
+  </select></p>
+
+  <form method="post" action="join" id="join">
+    <p><input type="submit" value="作成する"></p>
+  </form>
+
+
+</body>
+</html>
+
+<script type="text/javascript">
+
+    var dropZone = document.getElementById('drop-zone');
+    var preview = document.getElementById('preview');
+    var fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('dragover', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.style.background = '#e1e7f0';
+    }, false);
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.style.background = '#ffffff';
+    }, false);
+
+    fileInput.addEventListener('change', function () {
+        previewFile(this.files[0]);
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        this.style.background = '#ffffff'; //背景色を白に戻す
+        var files = e.dataTransfer.files; //ドロップしたファイルを取得
+        fileInput.files = files; //inputのvalueをドラッグしたファイルに置き換える。
+        previewFile(files[0]);
+    }, false);
+
+    function previewFile(file) {
+        /* FileReaderで読み込み、プレビュー画像を表示。 */
+        var fr = new FileReader();
+        fr.readAsDataURL(file);
+        fr.onload = function() {
+            var img = document.createElement('img');
+            img.setAttribute('src', fr.result);
+            preview.innerHTML = '';
+            preview.appendChild(img);
+        };
+    }
+</script>
