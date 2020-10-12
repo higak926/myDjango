@@ -14,11 +14,15 @@ class Customer(models.Model):
     entry_age = models.IntegerField()
     selling_method = models.CharField(max_length=30)
     campaign = models.CharField(max_length=30)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class Payment(models.Model):
     id = models.AutoField(primary_key=True)
     amount = models.IntegerField()
     paid_flg = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 class OtherInfo(models.Model):
     id = models.AutoField(primary_key=True)
@@ -26,3 +30,5 @@ class OtherInfo(models.Model):
     arrears_at = models.IntegerField()
     arrears_count = models.IntegerField()
     bill_updage_count = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

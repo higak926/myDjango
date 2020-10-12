@@ -78,39 +78,11 @@ def delete(request):
 
 def join(request):
     file_list = os.listdir('./main/media/documents')
-    Customer.objects.all().delete()
-    Payment.objects.all().delete()
-    OtherInfo.objects.all().delete()
+    join = request.POST['join']
+    if join == 'inner-join':
+        result = Customer.objects.extra(tables=['main_payment'], where=['main_customer.id=main_payment.id'])
+        # Customer.objects.all().filter(id__in=[Payment.objects.values_list('id', flat=True)])
+        breakpoint()
 
     return render(request, 'main/index.html', {'file_list': file_list})
 
-
-# messages.success(request, 'アップロードが完了しました。')
-
-# if request.method == 'POST':
-#   form = DocumentForm(request.POST, request.FILES)
-#   if form.is_valid():
-#      form.save()
-#      messages.success(request, 'アップロードを保存しました。')
-# else:
-#   form = DocumentForm()
-#   messages.warning(request, 'アップロードできませんでした')
-
-# if request.method == 'POST':
-    #     form = UploadFileForm(request.POST, request.FILES)
-    #     if form.is_valid():
-    #         handle_uploaded_file(request.FILES['file'])
-    # else:
-    #     form = UploadFileForm()
-    # return render(request, 'main/index.html', {'form': form})
-
-# def handle_uploaded_file(file_obj):
-#     file_path = 'media/documents/' + file_obj.name
-#     with open(file_path, 'wb+') as destination:
-#         for chunk in file_obj.chunks():
-#             destination.write(chunk)
-
-    # content = {
-    # 'message': 'CSVによるモデル実行システム'
-    # }
-    # return render(request, 'main/index.html', content)

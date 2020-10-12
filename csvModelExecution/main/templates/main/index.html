@@ -1,46 +1,48 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSVModelExecution</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSVModelExecution</title>
 </head>
 <body>
-  <h1>CSVによるモデル実行システム</h1>
-  <form action="" method="post" enctype="multipart/form-data">
+<h1>CSVによるモデル実行システム</h1>
+<form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <div id="drop-zone" style="border: 1px solid; padding: 30px; width: 50%;">
-      <p>ファイルをドラッグ＆ドロップもしくは</p>
-      <input type="file" multiple="multiple" name="file" id="file-input">
-      <input type="submit" style="margin-top: 50px" value="UPLOAD">
+        <p>ファイルをドラッグ＆ドロップもしくは</p>
+        <input type="file" multiple="multiple" name="file" id="file-input">
+        <input type="submit" style="margin-top: 50px" value="UPLOAD">
     </div>
-  </form>
+</form>
 
-  <h3 style='margin-top: 50px'>アップロード済みファイル</h3>
-  {% for file in file_list %}
+<div style='margin-top: 50px'>
+    <h3>アップロード済みファイル</h3>
+    {% for file in file_list %}
     <p>{{file}}</p>
-  {% endfor %}
+    {% endfor %}
 
-  <form method="post" action="insert" id="insert" style='margin-top: 50px'>
-    {% csrf_token %}
-    <p><input type="submit" value="DB登録"></p>
-  </form>
+    <form method="post" action="insert" id="insert">
+        {% csrf_token %}
+        <p><input type="submit" value="DB登録"></p>
+    </form>
 
-  <form method="post" action="delete" id="delete">
-    {% csrf_token %}
-    <p><input type="submit" value="DBデータ削除"></p>
-  </form>
+    <form method="post" action="delete" id="delete">
+        {% csrf_token %}
+        <p><input type="submit" value="DBデータ削除"></p>
+    </form>
+</div>
 
-
-  <h3 style='margin-top: 50px'>結合データファイルの作成</h3>
-  <p>結合形式：<select name="join" form="join">
+<h3 style='margin-top: 50px'>結合データファイルの作成</h3>
+<p>結合形式：<select name="join" form="join">
     <option value="inner-join">INNER JOIN</option>
     <option value="left-right-outer-join">LEFT/RIGHT OUTER JOIN</option>
-  </select></p>
+</select></p>
 
-  <form method="post" action="join" id="join">
+<form method="post" action="join" id="join">
+    {% csrf_token %}
     <p><input type="submit" value="作成する"></p>
-  </form>
+</form>
 
 
 </body>
@@ -88,4 +90,5 @@
             preview.appendChild(img);
         };
     }
+
 </script>
