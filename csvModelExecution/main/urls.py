@@ -9,6 +9,7 @@ urlpatterns = [
     path('insert', views.insert, name='insert'),
     path('delete', views.delete, name='delete'),
     path('join', views.join, name='join'),
+    path('model-create', views.model_create, name='model-create'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

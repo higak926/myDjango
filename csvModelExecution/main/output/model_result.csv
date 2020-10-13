@@ -1,0 +1,2 @@
+,coefficient,intercept,confusion_matrix,accuracy_score,precision_score,recall_score,f1_score
+0,-0.02927322623644033,-0.8838585140674727,"[1030, 103]",0.9090909090909091,0.0,0.0,0.0

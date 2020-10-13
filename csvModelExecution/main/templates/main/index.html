@@ -44,6 +44,15 @@
     <p><input type="submit" value="作成する"></p>
 </form>
 
+<div style='margin-top: 50px'>
+    <h3>モデルの構築</h3>
+    <form method="post" action="model-create" id="model-create">
+        {% csrf_token %}
+        <p>予測対象：「paid_flg」</p>
+        <p><input type="submit" value="構築する"></p>
+    </form>
+</div>
+
 
 </body>
 </html>
