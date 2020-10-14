@@ -2,10 +2,10 @@ import csv
 import io
 import os
 import pandas as pd
+import boto3
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
-
 from django.shortcuts import render
 from .models import OtherInfo, Customer, Payment
 
@@ -141,14 +141,14 @@ def join(request):
     if join == 'inner-join':
         inner_joined1 = pd.merge(customer_data, payment_data, how="inner", on="customer_id")
         inner_joined2 = pd.merge(inner_joined1, other_info_data, how="inner", on="customer_id")
-        output_path = './main/output/'
+        output_path = './static/output/'
         output_name = 'inner_join.csv'
         inner_joined2.to_csv(output_path + output_name)
 
     if join == 'left-right-outer-join':
         outer_joined1 = pd.merge(customer_data, payment_data, how="outer", on="customer_id")
         outer_joined2 = pd.merge(outer_joined1, other_info_data, how="outer", on="customer_id")
-        output_path = './main/output/'
+        output_path = './static/output/'
         output_name = 'outer_join.csv'
         outer_joined2.to_csv(output_path + output_name)
 
@@ -159,7 +159,7 @@ def model_create(request):
     df = pd.read_csv('./main/output/inner_join.csv')
     df_f = df.sample(frac=1)
     df_s = df_f.sample(n=5662)
-    df_s.to_csv('./main/output/used_model_create.csv')
+    df_s.to_csv('./static/output/used_model_create.csv')
     df[~df.isin(df_s.to_dict(orient='list')).all(1)].to_csv('./main/output/data_25.csv')
 
     x1 = df_s[['customer_rank']]
@@ -187,6 +187,10 @@ def model_create(request):
                                   'recall_score',
                                   'f1_score'
                                   ])
-    model.to_csv('./main/output/model_result.csv')
+    model.to_csv('./static/output/model_result.csv')
+    # TODO :  本番環境実行時に有効
+    # s3 = boto3.resource('s3')
+    # bucket = s3.Bucket('csv-model-execution')
+    # bucket.upload_file('./static/output/model_result.csv')
 
     return render(request, 'main/index.html', {'file_list': file_list})

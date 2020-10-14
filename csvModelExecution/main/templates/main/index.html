@@ -4,63 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSVModelExecution</title>
+
+    {% load static %}
+    {% block extrahead %}
+    <link href="{% static 'main.css' %}" rel="stylesheet">
+    {% endblock %}
+
 </head>
 <body>
-<h1>CSVによるモデル実行システム</h1>
-<form action="" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <div id="drop-zone" style="border: 1px solid; padding: 30px; width: 50%;">
-        <p>ファイルをドラッグ＆ドロップもしくは</p>
-        <input type="file" multiple="multiple" name="file" id="file-input">
-        <input type="submit" style="margin-top: 50px" value="UPLOAD">
+<header>
+    <h1>CSVによるモデル実行システム</h1>
+</header>
+
+<div class="wrapper">
+    <h3>ファイルのアップロード</h3>
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div id="drop-zone" style="border: 1px solid; padding: 30px; width: 35%;">
+            <p>ファイルをドラッグ＆ドロップもしくは</p>
+            <input type="file" multiple="multiple" name="file" id="file-input">
+            <input type="submit" style="margin-top: 50px" value="UPLOAD">
+        </div>
+    </form>
+
+    <div style='margin-top: 50px'>
+        <h3>アップロード済みファイル</h3>
+        {% for file in file_list %}
+        <p>{{file}}</p>
+        {% endfor %}
+
+        <form method="post" action="insert" id="insert">
+            {% csrf_token %}
+            <p><input type="submit" value="DB登録"></p>
+        </form>
+
+        <form method="post" action="delete" id="delete">
+            {% csrf_token %}
+            <p><input type="submit" value="DBデータ削除"></p>
+        </form>
     </div>
-</form>
 
-<div style='margin-top: 50px'>
-    <h3>アップロード済みファイル</h3>
-    {% for file in file_list %}
-    <p>{{file}}</p>
-    {% endfor %}
+    <h3 style='margin-top: 50px'>結合データファイルの作成</h3>
+    <p>結合形式：<select name="join" form="join">
+        <option value="inner-join">INNER JOIN</option>
+        <option value="left-right-outer-join">LEFT/RIGHT OUTER JOIN</option>
+    </select></p>
 
-    <form method="post" action="insert" id="insert">
+    <form method="post" action="join" id="join">
         {% csrf_token %}
-        <p><input type="submit" value="DB登録"></p>
+        <p><input type="submit" value="作成する"></p>
     </form>
 
-    <form method="post" action="delete" id="delete">
-        {% csrf_token %}
-        <p><input type="submit" value="DBデータ削除"></p>
-    </form>
+    <div style='margin-top: 50px'>
+        <h3>モデルの構築</h3>
+        <form method="post" action="model-create" id="model-create">
+            {% csrf_token %}
+            <p>予測対象：「paid_flg」</p>
+            <p><input type="submit" value="構築する"></p>
+        </form>
+    </div>
+
+    <div style='margin-top: 50px'>
+        <h3>モデル適用結果</h3>
+        <form method="post" action="download" id="download">
+            {% csrf_token %}
+            <p><input type="submit" class="download-btn" value="ダウンロード"></p>
+        </form>
+        <div class="preview">
+            <table class="table" border=1>
+                <caption>プレビュー</caption>
+                <tr><th>id</th><th>スコア</th></tr>
+                <tr><td>0</td><td>0.0..</td></tr>
+                <tr><td>1</td><td>0.0..</td></tr>
+                <tr><td>2</td><td>0.0..</td></tr>
+            </table>
+        </div>
+
+    </div>
 </div>
 
-<h3 style='margin-top: 50px'>結合データファイルの作成</h3>
-<p>結合形式：<select name="join" form="join">
-    <option value="inner-join">INNER JOIN</option>
-    <option value="left-right-outer-join">LEFT/RIGHT OUTER JOIN</option>
-</select></p>
-
-<form method="post" action="join" id="join">
-    {% csrf_token %}
-    <p><input type="submit" value="作成する"></p>
-</form>
-
-<div style='margin-top: 50px'>
-    <h3>モデルの構築</h3>
-    <form method="post" action="model-create" id="model-create">
-        {% csrf_token %}
-        <p>予測対象：「paid_flg」</p>
-        <p><input type="submit" value="構築する"></p>
-    </form>
-</div>
-
-
+<footer>
+    <p>(c)copy right</p>
+</footer>
 </body>
 </html>
 
 <script type="text/javascript">
 
     var dropZone = document.getElementById('drop-zone');
-    var preview = document.getElementById('preview');
     var fileInput = document.getElementById('file-input');
 
     dropZone.addEventListener('dragover', function(e) {
@@ -88,16 +119,6 @@
         previewFile(files[0]);
     }, false);
 
-    function previewFile(file) {
-        /* FileReaderで読み込み、プレビュー画像を表示。 */
-        var fr = new FileReader();
-        fr.readAsDataURL(file);
-        fr.onload = function() {
-            var img = document.createElement('img');
-            img.setAttribute('src', fr.result);
-            preview.innerHTML = '';
-            preview.appendChild(img);
-        };
-    }
+
 
 </script>

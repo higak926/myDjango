@@ -17,3 +17,5 @@
 !/vcs.xml
 
 /csvModelExecution/main/media/documents/*
+/csvModelExecution/static/*
+/csvModelExecution/csvModelExecution/settings.py
