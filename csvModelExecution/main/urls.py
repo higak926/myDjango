@@ -10,6 +10,9 @@ urlpatterns = [
     path('delete', views.delete, name='delete'),
     path('join', views.join, name='join'),
     path('model-create', views.model_create, name='model-create'),
+    path('plot', views.get_svg, name='plot'),
+    path('model-apply', views.model_apply, name='model-apply'),
+    path('download', views.csv_download, name='download'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

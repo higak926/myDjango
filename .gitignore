@@ -16,6 +16,8 @@
 !/templateLanguages.xml
 !/vcs.xml
 
-/csvModelExecution/main/media/documents/*
+/csvModelExecution/main/media/*
+/csvModelExecution/main/output/*
 /csvModelExecution/static/*
-/csvModelExecution/csvModelExecution/settings.py
+/csvModelExecution/csvModelExecution/.env
+/csvModelExecution/.env
