@@ -18,17 +18,38 @@ from django.shortcuts import render
 from .models import OtherInfo, Customer, Payment
 
 file_list = os.listdir('./main/media/documents')
+order_list = ['未選択', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+item_list = ['customer_id',
+             'contract_type',
+             'sex',
+             'age',
+             'pref',
+             'payway',
+             'identified_doc',
+             'career',
+             'domain',
+             'region',
+             'entry_age',
+             'selling_method',
+             'campaign',
+             'amount',
+             'paid_flg',
+             'customer_rank',
+             'arrears_at',
+             'arrears_count',
+             'bill_updage_count',
+             ]
 explanatory_variable_list = ['contract_type',
-                        'age',
-                        'payway',
-                        'identified_doc',
-                        'domain',
-                        'entry_age',
-                        'amount',
-                        'customer_rank',
-                        'arrears_at',
-                        'arrears_count',
-                        'bill_updage_count']
+                             'age',
+                             'payway',
+                             'identified_doc',
+                             'domain',
+                             'entry_age',
+                             'amount',
+                             'customer_rank',
+                             'arrears_at',
+                             'arrears_count',
+                             'bill_updage_count']
 join_file_list = [os.path.basename(p) for p in glob.glob('./static/output/*_join.csv')
                   if os.path.isfile(p)]
 model_result = [os.path.basename(p) for p in glob.glob('./static/output/model_result.csv')
@@ -48,6 +69,8 @@ def index(request):
                 f.write(chunk)
                 f.close()
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,
@@ -98,6 +121,8 @@ def insert(request):
                         otherInfo.save()
 
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,
@@ -109,12 +134,29 @@ def delete(request):
     OtherInfo.objects.all().delete()
 
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,
                                                'explanatory_variable_list': explanatory_variable_list})
 
 def join(request):
+    join_order = [0]*19
+    for item in item_list:
+        order = request.POST[item]
+        if order == '未選択':
+            warning = 'すべての項目順序を入力して送信してください'
+            return render(request, 'main/index.html', {'file_list': file_list,
+                                                       'order_list': order_list,
+                                                       'item_list': item_list,
+                                                       'join_file_list': join_file_list,
+                                                       'model_result': model_result,
+                                                       'model_apply': model_apply,
+                                                       'explanatory_variable_list': explanatory_variable_list,
+                                                       'warning': warning})
+        join_order[int(order)-1] = item
+
     join = request.POST['join']
 
     for file in file_list:
@@ -169,27 +211,32 @@ def join(request):
                                                     'bill_updage_count'
                                                     ])
     if join == 'inner-join':
-        inner_joined1 = pd.merge(customer_data, payment_data, how="inner", on="customer_id")
-        inner_joined2 = pd.merge(inner_joined1, other_info_data, how="inner", on="customer_id")
+        inner1 = pd.merge(customer_data, payment_data, how="inner", on="customer_id")
+        inner2 = pd.merge(inner1, other_info_data, how="inner", on="customer_id")
+        inner_joined = inner2.reindex(join_order, axis='columns')
         output_path = './static/output/'
         output_name = 'inner_join.csv'
-        inner_joined2.to_csv(output_path + output_name)
+        inner_joined.to_csv(output_path + output_name)
 
     if join == 'left-join':
-        left_joined1 = pd.merge(payment_data, customer_data, how="left", on="customer_id")
-        left_joined2 = pd.merge(left_joined1, other_info_data, how="left", on="customer_id")
+        left1 = pd.merge(payment_data, customer_data, how="left", on="customer_id")
+        left2 = pd.merge(left1, other_info_data, how="left", on="customer_id")
+        left_joined = left2.reindex(join_order, axis='columns')
         output_path = './static/output/'
         output_name = 'left_join.csv'
-        left_joined2.to_csv(output_path + output_name)
+        left_joined.to_csv(output_path + output_name)
 
     if join == 'outer-join':
-        outer_joined1 = pd.merge(customer_data, payment_data, how="outer", on="customer_id")
-        outer_joined2 = pd.merge(outer_joined1, other_info_data, how="outer", on="customer_id")
+        outer1 = pd.merge(customer_data, payment_data, how="outer", on="customer_id")
+        outer2 = pd.merge(outer1, other_info_data, how="outer", on="customer_id")
+        outer_joined = outer2.reindex(join_order, axis='columns')
         output_path = './static/output/'
         output_name = 'outer_join.csv'
-        outer_joined2.to_csv(output_path + output_name)
+        outer_joined.to_csv(output_path + output_name)
 
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,
@@ -261,6 +308,8 @@ def model_create(request):
     performance_evaluations.to_csv('./static/output/performance_evaluations.csv')
 
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,
@@ -299,6 +348,8 @@ def model_apply(request):
     model.to_csv('./static/output/model_apply.csv')
 
     return render(request, 'main/index.html', {'file_list': file_list,
+                                               'order_list': order_list,
+                                               'item_list': item_list,
                                                'join_file_list': join_file_list,
                                                'model_result': model_result,
                                                'model_apply': model_apply,

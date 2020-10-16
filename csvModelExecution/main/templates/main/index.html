@@ -26,7 +26,10 @@
         <p>複数のCSVデータをアップロードし、アップロードされたデータを基にロジスティック回帰モデルを構築・適用します。<br>
           適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
         </p>
-        <img src="/media/images/logistic_reg.png">
+        <div class="logistic-image">
+          <img src="{% static 'logistic_reg.png' %}">
+          <p>※ ロジスティック回帰 イメージ</p>
+        </div>
       </div>
       <div class="col-12">
         <h3>ファイルのアップロード</h3>
@@ -37,12 +40,12 @@
           <div class="drop-zone" id="drop-zone">
             <p>ファイルをドラッグ＆ドロップもしくは</p>
             <input type="file" multiple="multiple" name="file" id="file-input">
-            <input type="submit" style="margin-top: 50px" value="UPLOAD">
+            <input type="submit" value="UPLOAD">
           </div>
         </form>
       </div>
       <div class="col-6">
-        <h5>アップロードされたファイル</h5>
+        <h5>アップロード済みファイルを表示</h5>
         {% for file in file_list %}
         <p>{{file}}</p>
         {% endfor %}
@@ -57,91 +60,123 @@
       </div>
 
       <div class="col-12">
-      <h3>結合データファイルの作成</h3>
+        <h3>結合データファイルの作成</h3>
       </div>
       <div class="col-6">
-      <p>結合形式：<select name="join" form="join">
-        <option value="inner-join">INNER JOIN</option>
-        <option value="left-join">LEFT JOIN</option>
-        <option value="outer-join">OUTER JOIN</option>
-      </select></p>
-      <form method="post" action="join" id="join">
-        {% csrf_token %}
-        <p><input type="submit" value="作成する"></p>
-      </form>
+        <p style="font-weight: bold;">■ 結合形式の指定</p>
+        <p>結合形式：<select name="join" form="join">
+          <option value="inner-join">INNER JOIN</option>
+          <option value="left-join">LEFT JOIN</option>
+          <option value="outer-join">OUTER JOIN</option>
+        </select><br>
+          <span class="annotation">
+          ※ LEFT-JOINを選択した場合、「paid_flg」がNULLにならないようにするため<br>
+          「payment.csv」を軸として結合する
+          </span>
+        </p>
+        <p style="font-weight: bold;">■ 出力データ項目の順序指定</p>
+        <div class="item-order">
+          {% for item in item_list %}
+          <p>{{item}}<br>
+            <select name={{item}} form="join">
+              {% for order in order_list %}
+              <option value={{order}}>{{order}}</option>
+              {% endfor %}
+            </select>
+          </p>
+          {% endfor %}
+        </div>
+        <button type="button" onclick="join_reset()" style="margin-bottom: 20px;">選択をリセット</button>
+
+        <div class="warning">
+          <p>{{warning}}</p>
+        </div>
+
+        <form method="post" action="join" id="join" name="join">
+          {% csrf_token %}
+          <p><input type="submit" value="作成する"></p>
+        </form>
       </div>
       <div class="col-6">
-      <h5>結合データ</h5>
-      {% for file in join_file_list %}
-      <p>{{file}}</p>
-      {% endfor %}
+        <h5>結合データの出力ファイルを表示</h5>
+        {% for file in join_file_list %}
+        <p>{{file}}</p>
+        {% endfor %}
       </div>
 
       <div class="col-12">
-      <h3>モデルの構築・適用</h3>
+        <h3>モデルの構築・適用</h3>
       </div>
       <div class="col-6">
-      <p>予測対象：「paid_flg」</p>
-      <p>データの結合形式：<select name="combined-format" form="model-create">
-        <option value="inner">inner_join</option>
-        <option value="left">left_join</option>
-      </select></p>
-      <p>説明変数：<select name="model-create" form="model-create">
-        {% for file in explanatory_variable_list %}
-        <option value={{file}}>{{file}}</option>
+        <p style="font-weight: bold;">■ 予測対象の設定</p>
+        <p>予測対象：「paid_flg」</p>
+        <p style="font-weight: bold;">■ 結合形式の選択</p>
+        <p>結合形式：<select name="combined-format" form="model-create">
+          <option value="inner">inner_join</option>
+          <option value="left">left_join</option>
+        </select></p>
+
+        <div class="explanatory-var">
+          <p style="font-weight: bold;">■ 説明変数の選択</p><br>
+          {% for var in explanatory_variable_list %}
+          <p>
+            <input type="checkbox" name="model-create" form="model-create" value=var> {{var}}
+          </p>
+          {% endfor %}
+        </div>
+        <form method="post" action="model-create" id="model-create">
+          {% csrf_token %}
+          <p><input type="submit" value="構築・適用する"></p>
+        </form>
+      </div>
+      <div class="col-6">
+        <h5>構築されたモデルのデータファイルを表示</h5>
+        {% for file in model_result %}
+        <p>{{file}}</p>
         {% endfor %}
-      </select></p>
-      <form method="post" action="model-create" id="model-create">
-        {% csrf_token %}
-        <p><input type="submit" value="構築・適用する"></p>
-      </form>
-      </div>
-      <div class="col-6">
-      <h5>構築されたモデル</h5>
-      {% for file in model_result %}
-      <p>{{file}}</p>
-      {% endfor %}
-      <h5>モデル適用結果のアウトプット</h5>
-      {% for file in model_result %}
-      <p>{{file}}</p>
-      {% endfor %}
+        <h5>モデル適用結果の出力ファイルを表示</h5>
+        {% for file in model_result %}
+        <p>{{file}}</p>
+        {% endfor %}
       </div>
 
-      <h3>モデル適用結果</h3>
-      <div class="result-graph">
-        <img src="{% url 'plot' %}" width=600 height=600>
-      </div>
+      <div class="col-12">
+        <h3>モデル適用結果</h3>
+        <div class="result-graph">
+          <img src="{% url 'plot' %}" width=600 height=600>
+        </div>
 
-      <!--    <link href="{% static 'output/model_apply.csv' %}" download="{{ model_apply.csv }}" class="download-btn" value="ダウンロード">-->
-      <!--    <div class="download-btn">-->
-      <!--      <button type=“button” onclick="/static/output/model_apply.csv">ダウンロード</button>-->
-      <!--    <a href=" /static/output/model_apply.csv">ダウンロード</a>-->
-      <!--    </div>-->
+        <!--    <link href="{% static 'output/model_apply.csv' %}" download="{{ model_apply.csv }}" class="download-btn" value="ダウンロード">-->
+        <!--    <div class="download-btn">-->
+        <!--      <button type=“button” onclick="/static/output/model_apply.csv">ダウンロード</button>-->
+        <!--    <a href=" /static/output/model_apply.csv">ダウンロード</a>-->
+        <!--    </div>-->
 
-      <form method="post" action="download" id="download">
-        {% csrf_token %}
-        <p><input type="submit" class="download-btn" value="ダウンロード"></p>
-      </form>
-      <div class="preview">
-        <table class="table" border=1>
-          <caption>プレビュー</caption>
-          <tr>
-            <th>id</th>
-            <th>スコア</th>
-          </tr>
-          <tr>
-            <td>0</td>
-            <td>0.0..</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>0.0..</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>0.0..</td>
-          </tr>
-        </table>
+        <form method="post" action="download" id="download">
+          {% csrf_token %}
+          <p><input type="submit" class="download-btn" value="ダウンロード"></p>
+        </form>
+        <div class="preview">
+          <table class="table" border=1>
+            <caption>プレビュー</caption>
+            <tr>
+              <th>id</th>
+              <th>スコア</th>
+            </tr>
+            <tr>
+              <td>0</td>
+              <td>0.0..</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>0.0..</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>0.0..</td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -181,6 +216,37 @@
         fileInput.files = files; //inputのvalueをドラッグしたファイルに置き換える。
         previewFile(files[0]);
     }, false);
+
+    function join_reset() {
+    	document.join.reset();
+    }
+
+    $(".item-order").on("change", function() {
+
+        var selectedValues = [];
+        $(".item-order option:not([value='']):selected").each(function() {
+            var $opt = $(this);
+            selectedValues.push($opt.val());
+        });
+
+        $(".item-order option:not([value='']):not(:selected)").each(function() {
+            var $opt = $(this);
+            var val = $opt.val();
+
+            // チェック対象のoptionのvalueが、selectedValuesに存在するものならdisabledにする
+            // そうでないならdisabled解除
+            if ($.inArray(val, selectedValues) >= 0 && val != "未選択") {
+                $opt.prop("disabled", true);
+            } else {
+                $opt.prop("disabled", false);
+            }
+        });
+    });
+
+
+
+
+
 
 
 </script>
