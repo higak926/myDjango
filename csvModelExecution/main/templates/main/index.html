@@ -89,7 +89,7 @@
         <button type="button" onclick="join_reset()" style="margin-bottom: 20px;">選択をリセット</button>
 
         <div class="warning">
-          <p>{{warning}}</p>
+          <p>{{order_warning}}</p>
         </div>
 
         <form method="post" action="join" id="join" name="join">
@@ -120,10 +120,15 @@
           <p style="font-weight: bold;">■ 説明変数の選択</p><br>
           {% for var in explanatory_variable_list %}
           <p>
-            <input type="checkbox" name="model-create" form="model-create" value=var> {{var}}
+            <input type="checkbox" name={{var}} form="model-create" value={{var}}> {{var}}
           </p>
           {% endfor %}
         </div>
+
+        <div class="warning">
+          <p>{{choice_var_warning}}</p>
+        </div>
+
         <form method="post" action="model-create" id="model-create">
           {% csrf_token %}
           <p><input type="submit" value="構築・適用する"></p>
@@ -151,6 +156,10 @@
         <!--      <button type=“button” onclick="/static/output/model_apply.csv">ダウンロード</button>-->
         <!--    <a href=" /static/output/model_apply.csv">ダウンロード</a>-->
         <!--    </div>-->
+
+        <div class="warning">
+          <p>{{score_warning}}</p>
+        </div>
 
         <form method="post" action="download" id="download">
           {% csrf_token %}
@@ -242,6 +251,7 @@
             }
         });
     });
+
 
 
 

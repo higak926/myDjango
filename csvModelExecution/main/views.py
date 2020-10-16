@@ -1,4 +1,6 @@
+import collections
 import csv
+import decimal
 import glob
 import io
 import os
@@ -56,6 +58,11 @@ model_result = [os.path.basename(p) for p in glob.glob('./static/output/model_re
                 if os.path.isfile(p)]
 model_apply = [os.path.basename(p) for p in glob.glob('./static/output/model_apply.csv')
                if os.path.isfile(p)]
+
+score_list_display = []
+if os.path.exists('./static/output/model_apply_result.csv'):
+    score_pd = pd.read_csv("./static/output/model_apply_result.csv").values.tolist()
+    score_list_display = score_pd[0:10]
 
 def index(request):
     if request.method == 'POST':
@@ -146,7 +153,7 @@ def join(request):
     for item in item_list:
         order = request.POST[item]
         if order == '未選択':
-            warning = 'すべての項目順序を入力して送信してください'
+            order_warning = 'すべての項目順序を入力して送信してください'
             return render(request, 'main/index.html', {'file_list': file_list,
                                                        'order_list': order_list,
                                                        'item_list': item_list,
@@ -154,7 +161,7 @@ def join(request):
                                                        'model_result': model_result,
                                                        'model_apply': model_apply,
                                                        'explanatory_variable_list': explanatory_variable_list,
-                                                       'warning': warning})
+                                                       'order_warning': order_warning})
         join_order[int(order)-1] = item
 
     join = request.POST['join']
@@ -248,36 +255,44 @@ def model_create(request):
     if combined_format == 'left':
         df = pd.read_csv('./static/output/left_join.csv')
 
-    # df_f = df.sample(frac=1)
-    # df_s = df_f.sample(n=5662)
-    # df_s.to_csv('./main/output/used_model_create.csv')
-    # df[~df.isin(df_s.to_dict(orient='list')).all(1)].to_csv('./main/output/data_25.csv')
-    explanatory_var = request.POST['model-create']
-    combined_format = request.POST['combined-format']
-    breakpoint()
+    choice_variable_list = []
+    for var in explanatory_variable_list:
+        request_var = request.POST.get(var)
+        if request_var != None:
+            choice_variable_list.append(request_var)
 
-    x1 = df[[explanatory_var]]
+    if not choice_variable_list:
+        choice_var_warning = '一つ以上の説明変数を選択してください'
+        return render(request, 'main/index.html', {'file_list': file_list,
+                                                   'order_list': order_list,
+                                                   'item_list': item_list,
+                                                   'join_file_list': join_file_list,
+                                                   'model_result': model_result,
+                                                   'model_apply': model_apply,
+                                                   'explanatory_variable_list': explanatory_variable_list,
+                                                   'choice_var_warning': choice_var_warning})
+
+    x1 = df[choice_variable_list]
     y1 = df[['paid_flg']]
     x1_train, x1_test, y1_train, y1_test = train_test_split(x1, y1, test_size=0.25, random_state=0)
-    # TODO : model_list各々要作成
-    model_list = [[x1_train, x1_test, y1_train, y1_test]]
-    model = pd.DataFrame(model_list,
-                          columns=['x1_train',
-                                   'x1_test',
-                                   'y1_train',
-                                   'y1_test'])
-    model.to_csv('./static/output/model.csv')
+
+    x1_train_reault = pd.DataFrame(x1_train,columns=choice_variable_list)
+    x1_test_reault = pd.DataFrame(x1_test,columns=choice_variable_list)
+    y1_train_reault = pd.DataFrame(y1_train,columns=['paid_flg'])
+    y1_test_reault = pd.DataFrame(y1_test,columns=['paid_flg'])
+    x1_train_reault.to_csv('./static/output/data/x1_train.csv')
+    x1_test_reault.to_csv('./static/output/data/x1_test.csv')
+    y1_train_reault.to_csv('./static/output/data/y1_train.csv')
+    y1_test_reault.to_csv('./static/output/data/y1_test.csv')
 
     lr = LogisticRegression()
     lr.fit(x1_train, y1_train)
     coefficient = lr.coef_
     intercept = lr.intercept_
     y1_pred = lr.predict(x1_test)
-    prob = lr.predict_proba(x1_test)[:, 1]
-    prob_list = []
-    for i, el in enumerate(prob):
-        prob_list += [[i, el]]
-    model_apply_result = pd.DataFrame(prob_list, columns=['id', 'score'])
+    prob = lr.predict_proba(x1_test)[:, 1].round(3).tolist()
+    # prob = [prob]
+    model_apply_result = pd.DataFrame(prob, columns=['score'])
     model_apply_result.to_csv('./static/output/model_apply_result.csv')
 
     confusion = confusion_matrix(y_true=y1_test, y_pred=y1_pred)
@@ -317,14 +332,24 @@ def model_create(request):
 
 
 def get_svg(request):
-    x1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-    x = ['0.047', '0.094', '0.140', '0.187', '0.234', '0.281', '0.328', '0.374', '0.421', '0.468', '0.515', '0.562',
-         '0.608', '0.655', '0.702', '0.749', '0.795', '0.842', '0.889', '0.936', '0.983']
-    y = [16150, 2270, 1088, 526, 245, 195, 114, 65, 68, 43, 34, 30, 32, 29, 19, 16, 23, 23, 16, 13, 1]
-    plt.bar(x, y, width=0.7, color='#00d5ff')
+    x1 = ['0']*20
+    y1 = [0]*20
+    score_list = pd.read_csv("./static/output/model_apply_result.csv").values.tolist()
+    scores = []
+    for sl in score_list:
+        sl[1] = f"{sl[1]:.3f}"
+        scores.append(sl[1])
+    count = collections.Counter(scores).most_common()
+    for i, c in enumerate(count):
+        if i == 20:
+            break
+        x1[i] = c[0]
+        y1[i] = c[1]
+
+    plt.bar(x1, y1, width=0.7, color='#00d5ff')
     # plt.title('モデル適用結果', fontweight='bold', loc='left')
     plt.xticks(rotation=90)
-    plt.ylim([0, 18000])
+    plt.ylim([0, int(count[0][1]) + 100])
     plt.gca().spines['right'].set_visible(False)
     plt.gca().spines['top'].set_visible(False)
     plt.gca().yaxis.set_ticks_position('left')
@@ -341,26 +366,30 @@ def get_svg(request):
 
     return response
 
-def model_apply(request):
-    model_list = []
-    model = pd.DataFrame(model_list,
-                         columns=['coefficient'])
-    model.to_csv('./static/output/model_apply.csv')
-
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'model_apply': model_apply,
-                                               'explanatory_variable_list': explanatory_variable_list})
-
 def csv_download(request):
-    model_list = []
-    model = pd.DataFrame(model_list,
-                         columns=['coefficient'])
-    response = HttpResponse(model, content_type='text/csv')
-    filename = 'model_apply.csv'
+    if not os.path.exists('./static/output/model_apply_result.csv'):
+        score_warning = 'モデルを構築・適用してください'
+        return render(request, 'main/index.html', {'file_list': file_list,
+                                                   'order_list': order_list,
+                                                   'item_list': item_list,
+                                                   'join_file_list': join_file_list,
+                                                   'model_result': model_result,
+                                                   'model_apply': model_apply,
+                                                   'explanatory_variable_list': explanatory_variable_list,
+                                                   'score_warning': score_warning})
+
+    score_list = pd.read_csv("./static/output/model_apply_result.csv").values.tolist()
+    score_list_s = score_list[0:10]
+    for sl in score_list_s:
+        sl[1] = f"{sl[1]:.3f}"
+    scores = []
+    for score in score_list_s:
+        scores.append(score[1])
+
+    score_pd = pd.DataFrame(scores, columns=['score'])
+    response = HttpResponse(score_pd, content_type='text/csv')
+    filename = 'score.csv'
     response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+    score_pd.to_csv(path_or_buf=response, decimal=",")
 
     return response

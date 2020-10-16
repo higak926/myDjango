@@ -18,6 +18,7 @@
 
 /csvModelExecution/main/media/*
 /csvModelExecution/main/output/*
-/csvModelExecution/static/*
+/csvModelExecution/static/output
+/csvModelExecution/static/logistic_reg.png
 /csvModelExecution/csvModelExecution/.env
 /csvModelExecution/.env

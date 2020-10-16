@@ -11,7 +11,6 @@ urlpatterns = [
     path('join', views.join, name='join'),
     path('model-create', views.model_create, name='model-create'),
     path('plot', views.get_svg, name='plot'),
-    path('model-apply', views.model_apply, name='model-apply'),
     path('download', views.csv_download, name='download'),
 ]
 
