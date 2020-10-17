@@ -11,7 +11,6 @@ urlpatterns = [
     path('join', views.join, name='join'),
     path('model-create', views.model_create, name='model-create'),
     path('plot', views.get_svg, name='plot'),
-    path('download', views.csv_download, name='download'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

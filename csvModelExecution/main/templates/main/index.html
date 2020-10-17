@@ -45,7 +45,8 @@
         </form>
       </div>
       <div class="col-6">
-        <h5>アップロード済みファイルを表示</h5>
+        <h5>アップロード済みファイル</h5>
+        {% if file_list|length > 1 %}
         {% for file in file_list %}
         <p>{{file}}</p>
         {% endfor %}
@@ -57,10 +58,14 @@
           {% csrf_token %}
           <p><input type="submit" value="DBデータ削除"></p>
         </form>
+        {% endif %}
       </div>
 
       <div class="col-12">
         <h3>結合データファイルの作成</h3>
+<!--        {% if file_list|length < 2 %}-->
+<!--        <p class="warning">結合対象のファイルをアップデートしてください</p>-->
+<!--        {% endif %}-->
       </div>
       <div class="col-6">
         <p style="font-weight: bold;">■ 結合形式の指定</p>
@@ -98,7 +103,7 @@
         </form>
       </div>
       <div class="col-6">
-        <h5>結合データの出力ファイルを表示</h5>
+        <h5>結合データの出力ファイル</h5>
         {% for file in join_file_list %}
         <p>{{file}}</p>
         {% endfor %}
@@ -106,6 +111,9 @@
 
       <div class="col-12">
         <h3>モデルの構築・適用</h3>
+<!--        {% if join_file_list|length < 1 %}-->
+<!--        <p class="warning">モデル構築に使用する結合ファイルを作成してください</p>-->
+<!--        {% endif %}-->
       </div>
       <div class="col-6">
         <p style="font-weight: bold;">■ 予測対象の設定</p>
@@ -135,11 +143,11 @@
         </form>
       </div>
       <div class="col-6">
-        <h5>構築されたモデルのデータファイルを表示</h5>
+        <h5>構築されたモデルのデータファイル</h5>
         {% for file in model_result %}
         <p>{{file}}</p>
         {% endfor %}
-        <h5>モデル適用結果の出力ファイルを表示</h5>
+        <h5>モデル適用結果の出力ファイル</h5>
         {% for file in model_result %}
         <p>{{file}}</p>
         {% endfor %}
@@ -150,21 +158,11 @@
         <div class="result-graph">
           <img src="{% url 'plot' %}" width=600 height=600>
         </div>
-
-        <!--    <link href="{% static 'output/model_apply.csv' %}" download="{{ model_apply.csv }}" class="download-btn" value="ダウンロード">-->
-        <!--    <div class="download-btn">-->
-        <!--      <button type=“button” onclick="/static/output/model_apply.csv">ダウンロード</button>-->
-        <!--    <a href=" /static/output/model_apply.csv">ダウンロード</a>-->
-        <!--    </div>-->
-
+        <a href="{% static 'output/score.csv' %}" , class="download-btn">ダウンロード</a>
         <div class="warning">
-          <p>{{score_warning}}</p>
+          <p>モデルの構築・適用が完了するとヒストグラムが表示され、スコアをダウンロードすることができます</p>
         </div>
 
-        <form method="post" action="download" id="download">
-          {% csrf_token %}
-          <p><input type="submit" class="download-btn" value="ダウンロード"></p>
-        </form>
         <div class="preview">
           <table class="table" border=1>
             <caption>プレビュー</caption>
@@ -172,18 +170,12 @@
               <th>id</th>
               <th>スコア</th>
             </tr>
+            {% for score_display in score_list_display %}
             <tr>
-              <td>0</td>
-              <td>0.0..</td>
+              <td>{{ forloop.counter0 }}</td>
+              <td>{{score_display}}</td>
             </tr>
-            <tr>
-              <td>1</td>
-              <td>0.0..</td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td>0.0..</td>
-            </tr>
+            {% endfor %}
           </table>
         </div>
       </div>
@@ -251,6 +243,7 @@
             }
         });
     });
+
 
 
 
