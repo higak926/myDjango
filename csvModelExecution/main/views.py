@@ -9,36 +9,16 @@ import boto3
 import matplotlib
 # import japanize_matplotlib
 # バックエンドを指定
-from django.http import HttpResponse
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+from django.http import HttpResponse
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from django.shortcuts import render
 from .models import OtherInfo, Customer, Payment
-
-file_list = os.listdir('./main/media/documents')
-order_list = ['未選択', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-item_list = ['customer_id', 'contract_type', 'sex', 'age', 'pref', 'payway', 'identified_doc',
-             'career', 'domain', 'region', 'entry_age', 'selling_method', 'campaign', 'amount',
-             'paid_flg', 'customer_rank', 'arrears_at', 'arrears_count', 'bill_updage_count']
-explanatory_variable_list = ['contract_type', 'age', 'payway', 'identified_doc', 'domain',
-                             'entry_age', 'amount', 'customer_rank', 'arrears_at', 'arrears_count',
-                             'bill_updage_count']
-join_file_list = [os.path.basename(p) for p in glob.glob('./static/output/*_join.csv')
-                  if os.path.isfile(p)]
-model_result = [os.path.basename(p) for p in glob.glob('./static/output/model_result.csv')
-                if os.path.isfile(p)]
-score_file = [os.path.basename(p) for p in glob.glob('./static/output/score.csv')
-               if os.path.isfile(p)]
-
-score_list_display = []
-if os.path.exists('./static/output/score.csv'):
-    scores_display = pd.read_csv("./static/output/score.csv").values.tolist()[0:10]
-    for sl in scores_display:
-        score_list_display.append(sl[1])
+from . import views_list
 
 def index(request):
     if request.method == 'POST':
@@ -51,17 +31,17 @@ def index(request):
             for chunk in file.chunks():
                 f.write(chunk)
                 f.close()
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'score_file': score_file,
-                                               'explanatory_variable_list': explanatory_variable_list,
-                                               'score_list_display': score_list_display})
+    return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                               'order_list': views_list.get_order_list(),
+                                               'item_list': views_list.get_item_list(),
+                                               'join_file_list': views_list.get_join_file_list(),
+                                               'model_result': views_list.get_model_result(),
+                                               'score_file': views_list.get_score_file(),
+                                               'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                               'score_list_display': views_list.get_score_list_display()})
 
 def insert(request):
-    for file in file_list:
+    for file in views_list.get_file_list():
         if file == 'customer.csv':
             with open('./main/media/documents/customer.csv') as f:
                 for row in csv.reader(f):
@@ -104,49 +84,50 @@ def insert(request):
                                                                              )
                         otherInfo.save()
 
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'score_file': score_file,
-                                               'explanatory_variable_list': explanatory_variable_list,
-                                               'score_list_display': score_list_display})
+    return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                               'order_list': views_list.get_order_list(),
+                                               'item_list': views_list.get_item_list(),
+                                               'join_file_list': views_list.get_join_file_list(),
+                                               'model_result': views_list.get_model_result(),
+                                               'score_file': views_list.get_score_file(),
+                                               'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                               'score_list_display': views_list.get_score_list_display()})
 
 def delete(request):
     Customer.objects.all().delete()
     Payment.objects.all().delete()
     OtherInfo.objects.all().delete()
 
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'score_file': score_file,
-                                               'explanatory_variable_list': explanatory_variable_list,
-                                               'score_list_display': score_list_display})
+    return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                               'order_list': views_list.get_order_list(),
+                                               'item_list': views_list.get_item_list(),
+                                               'join_file_list': views_list.get_join_file_list(),
+                                               'model_result': views_list.get_model_result(),
+                                               'score_file': views_list.get_score_file(),
+                                               'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                               'score_list_display': views_list.get_score_list_display()})
 
 def join(request):
     join_order = [0]*19
-    for item in item_list:
+    for item in views_list.get_item_list():
         order = request.POST[item]
         if order == '未選択':
             order_warning = 'すべての項目順序を入力して送信してください'
-            return render(request, 'main/index.html', {'file_list': file_list,
-                                                       'order_list': order_list,
-                                                       'item_list': item_list,
-                                                       'join_file_list': join_file_list,
-                                                       'model_result': model_result,
-                                                       'score_file': score_file,
+            return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                                       'order_list': views_list.get_order_list(),
+                                                       'item_list': views_list.get_item_list(),
+                                                       'join_file_list': views_list.get_join_file_list(),
+                                                       'model_result': views_list.get_model_result(),
+                                                       'score_file': views_list.get_score_file(),
+                                                       'explanatory_variable_list': views_list.get_explanatory_variable_list(),
                                                        'order_warning': order_warning,
-                                                       'explanatory_variable_list': explanatory_variable_list,
-                                                       'score_list_display': score_list_display})
+                                                       'score_list_display': views_list.get_score_list_display()})
+
         join_order[int(order)-1] = item
 
     join = request.POST['join']
 
-    for file in file_list:
+    for file in views_list.get_file_list():
         if file == 'customer.csv':
             with open('./main/media/documents/customer.csv') as f:
                 customer_list = []
@@ -221,14 +202,15 @@ def join(request):
         output_name = 'outer_join.csv'
         outer_joined.to_csv(output_path + output_name)
 
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'score_file': score_file,
-                                               'explanatory_variable_list': explanatory_variable_list,
-                                               'score_list_display': score_list_display})
+    return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                               'order_list': views_list.get_order_list(),
+                                               'item_list': views_list.get_item_list(),
+                                               'join_file_list': views_list.get_join_file_list(),
+                                               'model_result': views_list.get_model_result(),
+                                               'score_file': views_list.get_score_file(),
+                                               'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                               'score_list_display': views_list.get_score_list_display()})
+
 
 def model_create(request):
     df = pd.read_csv('./static/output/inner_join.csv')
@@ -237,22 +219,22 @@ def model_create(request):
         df = pd.read_csv('./static/output/left_join.csv')
 
     choice_variable_list = []
-    for var in explanatory_variable_list:
+    for var in views_list.get_explanatory_variable_list():
         request_var = request.POST.get(var)
         if request_var != None:
             choice_variable_list.append(request_var)
 
     if not choice_variable_list:
         choice_var_warning = '一つ以上の説明変数を選択してください'
-        return render(request, 'main/index.html', {'file_list': file_list,
-                                                   'order_list': order_list,
-                                                   'item_list': item_list,
-                                                   'join_file_list': join_file_list,
-                                                   'model_result': model_result,
-                                                   'score_file': score_file,
+        return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                                   'order_list': views_list.get_order_list(),
+                                                   'item_list': views_list.get_item_list(),
+                                                   'join_file_list': views_list.get_join_file_list(),
+                                                   'model_result': views_list.get_model_result(),
+                                                   'score_file': views_list.get_score_file(),
+                                                   'explanatory_variable_list': views_list.get_explanatory_variable_list(),
                                                    'choice_var_warning': choice_var_warning,
-                                                   'explanatory_variable_list': explanatory_variable_list,
-                                                   'score_list_display': score_list_display})
+                                                   'score_list_display': views_list.get_score_list_display()})
 
     x1 = df[choice_variable_list]
     y1 = df[['paid_flg']]
@@ -305,35 +287,38 @@ def model_create(request):
                                   ])
     performance_evaluations.to_csv('./static/output/performance_evaluations.csv')
 
-    return render(request, 'main/index.html', {'file_list': file_list,
-                                               'order_list': order_list,
-                                               'item_list': item_list,
-                                               'join_file_list': join_file_list,
-                                               'model_result': model_result,
-                                               'score_file': score_file,
-                                               'explanatory_variable_list': explanatory_variable_list,
-                                               'score_list_display': score_list_display})
+    return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                               'order_list': views_list.get_order_list(),
+                                               'item_list': views_list.get_item_list(),
+                                               'join_file_list': views_list.get_join_file_list(),
+                                               'model_result': views_list.get_model_result(),
+                                               'score_file': views_list.get_score_file(),
+                                               'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                               'score_list_display': views_list.get_score_list_display()})
 
 
 def get_svg(request):
     x1 = ['0']*20
     y1 = [0]*20
-    score_list = pd.read_csv("./static/output/score.csv").values.tolist()
-    scores = []
-    for sl in score_list:
-        sl[1] = f"{sl[1]:.3f}"
-        scores.append(sl[1])
-        count = collections.Counter(scores).most_common()
-        for i, c in enumerate(count):
-            if i == 20:
-                break
-            x1[i] = c[0]
-            y1[i] = c[1]
+    if os.path.exists('./static/output/score.csv'):
+        score_list = pd.read_csv("./static/output/score.csv").values.tolist()
+        scores = []
+        for sl in score_list:
+            sl[1] = f"{sl[1]:.3f}"
+            scores.append(sl[1])
+            count = collections.Counter(scores).most_common()
+            for i, c in enumerate(count):
+                if i == 20:
+                    break
+                x1[i] = c[0]
+                y1[i] = c[1]
 
     plt.bar(x1, y1, width=0.7, color='#00d5ff')
     # plt.title('モデル適用結果', fontweight='bold', loc='left')
     plt.xticks(rotation=90)
-    plt.ylim([0, int(count[0][1]) + 10])
+    plt.ylim([0, 1000])
+    if os.path.exists('./static/output/score.csv'):
+        plt.ylim([0, int(count[0][1]) + 100])
     plt.gca().spines['right'].set_visible(False)
     plt.gca().spines['top'].set_visible(False)
     plt.gca().yaxis.set_ticks_position('left')

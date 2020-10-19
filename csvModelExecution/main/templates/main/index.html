@@ -23,14 +23,20 @@
     <div class="row">
       <div class="overview">
         <h2>ページ概要</h2>
-        <p>複数のCSVデータをアップロードし、アップロードされたデータを基にロジスティック回帰モデルを構築・適用します。<br>
-          適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
-        </p>
-        <div class="logistic-image">
-          <img src="{% static 'logistic_reg.png' %}">
-          <p>※ ロジスティック回帰 イメージ</p>
+        <div class="col-6">
+          <p>複数のCSVデータをアップロードし、アップロードされたデータを基にロジスティック回帰モデルを構築・適用します。<br>
+            適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
+          </p>
+        </div>
+        <div class="col-6">
+          <div class="logistic-image">
+            <img src="{% static 'logistic_reg.png' %}">
+            <p>※ ロジスティック回帰 イメージ</p>
+          </div>
         </div>
       </div>
+    </div>
+    <div class="row">
       <div class="col-12">
         <h3>ファイルのアップロード</h3>
       </div>
@@ -60,12 +66,14 @@
         </form>
         {% endif %}
       </div>
+    </div>
 
+    <div class="row">
       <div class="col-12">
         <h3>結合データファイルの作成</h3>
-<!--        {% if file_list|length < 2 %}-->
-<!--        <p class="warning">結合対象のファイルをアップデートしてください</p>-->
-<!--        {% endif %}-->
+        {% if file_list|length < 2 %}
+        <p class="warning">結合対象のファイルをアップデートしてください</p>
+        {% endif %}
       </div>
       <div class="col-6">
         <p style="font-weight: bold;">■ 結合形式の指定</p>
@@ -108,12 +116,14 @@
         <p>{{file}}</p>
         {% endfor %}
       </div>
+    </div>
 
+    <div class="row">
       <div class="col-12">
         <h3>モデルの構築・適用</h3>
-<!--        {% if join_file_list|length < 1 %}-->
-<!--        <p class="warning">モデル構築に使用する結合ファイルを作成してください</p>-->
-<!--        {% endif %}-->
+        {% if join_file_list|length < 1 %}
+        <p class="warning">モデル構築に使用する結合ファイルを作成してください</p>
+        {% endif %}
       </div>
       <div class="col-6">
         <p style="font-weight: bold;">■ 予測対象の設定</p>
@@ -152,16 +162,21 @@
         <p>{{file}}</p>
         {% endfor %}
       </div>
+    </div>
 
+    <div class="row">
       <div class="col-12">
         <h3>モデル適用結果</h3>
+        {% if score_list_display|length < 1 %}
+        <div class="warning">
+          <p>モデルの構築・適用が完了するとヒストグラムが表示され、スコアをダウンロードすることができます</p>
+        </div>
+        {% else %}
         <div class="result-graph">
           <img src="{% url 'plot' %}" width=600 height=600>
         </div>
         <a href="{% static 'output/score.csv' %}" , class="download-btn">ダウンロード</a>
-        <div class="warning">
-          <p>モデルの構築・適用が完了するとヒストグラムが表示され、スコアをダウンロードすることができます</p>
-        </div>
+
 
         <div class="preview">
           <table class="table" border=1>
@@ -178,9 +193,12 @@
             {% endfor %}
           </table>
         </div>
+        {% endif %}
+
       </div>
     </div>
   </div>
+</div>
 </div>
 <footer>
   <p>(c)copy right</p>
@@ -237,17 +255,12 @@
             // チェック対象のoptionのvalueが、selectedValuesに存在するものならdisabledにする
             // そうでないならdisabled解除
             if ($.inArray(val, selectedValues) >= 0 && val != "未選択") {
-                $opt.prop("disabled", true);
+                $opt.hide();
             } else {
-                $opt.prop("disabled", false);
+                $opt.show();
             }
         });
     });
-
-
-
-
-
 
 
 
