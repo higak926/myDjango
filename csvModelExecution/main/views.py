@@ -1,11 +1,8 @@
 import collections
 import csv
-import decimal
-import glob
 import io
 import os
 import pandas as pd
-import boto3
 import matplotlib
 # import japanize_matplotlib
 # バックエンドを指定
@@ -38,7 +35,8 @@ def index(request):
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
                                                'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                               'score_list_display': views_list.get_score_list_display()})
+                                               'score_list_display': views_list.get_score_list_display(),
+                                               'roc_auc': views_list.get_roc_auc_score()})
 
 def insert(request):
     for file in views_list.get_file_list():
@@ -91,7 +89,8 @@ def insert(request):
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
                                                'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                               'score_list_display': views_list.get_score_list_display()})
+                                               'score_list_display': views_list.get_score_list_display(),
+                                               'roc_auc': views_list.get_roc_auc_score()})
 
 def delete(request):
     Customer.objects.all().delete()
@@ -105,9 +104,21 @@ def delete(request):
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
                                                'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                               'score_list_display': views_list.get_score_list_display()})
+                                               'score_list_display': views_list.get_score_list_display(),
+                                               'roc_auc': views_list.get_roc_auc_score()})
 
 def join(request):
+    if  not views_list.get_file_list():
+        return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                                   'order_list': views_list.get_order_list(),
+                                                   'item_list': views_list.get_item_list(),
+                                                   'join_file_list': views_list.get_join_file_list(),
+                                                   'model_result': views_list.get_model_result(),
+                                                   'score_file': views_list.get_score_file(),
+                                                   'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                                   'score_list_display': views_list.get_score_list_display(),
+                                                   'roc_auc': views_list.get_roc_auc_score()})
+
     join_order = [0]*19
     for item in views_list.get_item_list():
         order = request.POST[item]
@@ -121,7 +132,8 @@ def join(request):
                                                        'score_file': views_list.get_score_file(),
                                                        'explanatory_variable_list': views_list.get_explanatory_variable_list(),
                                                        'order_warning': order_warning,
-                                                       'score_list_display': views_list.get_score_list_display()})
+                                                       'score_list_display': views_list.get_score_list_display(),
+                                                       'roc_auc': views_list.get_roc_auc_score()})
 
         join_order[int(order)-1] = item
 
@@ -209,10 +221,22 @@ def join(request):
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
                                                'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                               'score_list_display': views_list.get_score_list_display()})
+                                               'score_list_display': views_list.get_score_list_display(),
+                                               'roc_auc': views_list.get_roc_auc_score()})
 
 
 def model_create(request):
+    if not views_list.get_file_list():
+        return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
+                                                   'order_list': views_list.get_order_list(),
+                                                   'item_list': views_list.get_item_list(),
+                                                   'join_file_list': views_list.get_join_file_list(),
+                                                   'model_result': views_list.get_model_result(),
+                                                   'score_file': views_list.get_score_file(),
+                                                   'explanatory_variable_list': views_list.get_explanatory_variable_list(),
+                                                   'score_list_display': views_list.get_score_list_display(),
+                                                   'roc_auc': views_list.get_roc_auc_score()})
+
     df = pd.read_csv('./static/output/inner_join.csv')
     combined_format = request.POST['combined-format']
     if combined_format == 'left':
@@ -234,7 +258,8 @@ def model_create(request):
                                                    'score_file': views_list.get_score_file(),
                                                    'explanatory_variable_list': views_list.get_explanatory_variable_list(),
                                                    'choice_var_warning': choice_var_warning,
-                                                   'score_list_display': views_list.get_score_list_display()})
+                                                   'score_list_display': views_list.get_score_list_display(),
+                                                   'roc_auc': views_list.get_roc_auc_score()})
 
     x1 = df[choice_variable_list]
     y1 = df[['paid_flg']]
@@ -253,10 +278,13 @@ def model_create(request):
     lr.fit(x1_train, y1_train)
     coefficient = lr.coef_
     intercept = lr.intercept_
+    model_data_list = [[coefficient, intercept]]
+    model_datas = pd.DataFrame(model_data_list, columns=['coefficient', 'intercept'])
+    model_datas.to_csv('./static/output/model_data.csv')
+
     y1_pred = lr.predict(x1_test)
     prob_csv = lr.predict_proba(x1_test)[:, 1].tolist()
     prob = lr.predict_proba(x1_test)[:, 1].round(3).tolist()
-    # prob = [prob]
     score_pd = pd.DataFrame(prob_csv, columns=['score'])
     score_pd.to_csv('./static/output/score.csv')
 
@@ -266,9 +294,7 @@ def model_create(request):
     roc_auc = roc_auc_score(y_true=y1_test, y_score=prob)
     recall = recall_score(y_true=y1_test, y_pred=y1_pred)
     f1 = f1_score(y_true=y1_test, y_pred=y1_pred)
-    performance_evaluation_list = [[coefficient[0][0],
-                                    intercept[0],
-                                    [[confusion[0][0], confusion[0][1]], [confusion[1][0], confusion[1][1]]],
+    performance_evaluation_list = [[confusion,
                                     accuracy,
                                     precision,
                                     roc_auc,
@@ -276,9 +302,7 @@ def model_create(request):
                                     f1]]
 
     performance_evaluations = pd.DataFrame(performance_evaluation_list,
-                         columns=['coefficient',
-                                  'intercept',
-                                  'confusion_matrix',
+                         columns=['confusion_matrix',
                                   'accuracy_score',
                                   'precision_score',
                                   'roc_auc',
@@ -294,7 +318,8 @@ def model_create(request):
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
                                                'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                               'score_list_display': views_list.get_score_list_display()})
+                                               'score_list_display': views_list.get_score_list_display(),
+                                               'roc_auc': views_list.get_roc_auc_score()})
 
 
 def get_svg(request):

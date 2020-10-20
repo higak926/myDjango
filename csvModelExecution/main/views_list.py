@@ -32,7 +32,7 @@ def get_join_file_list():
     return join_file_list
 
 def get_model_result():
-    model_result = [os.path.basename(p) for p in glob.glob('./static/output/model_result.csv')
+    model_result = [os.path.basename(p) for p in glob.glob('./static/output/model_data.csv')
                     if os.path.isfile(p)]
 
     return model_result
@@ -52,3 +52,9 @@ def get_score_list_display():
 
     return score_list_display
 
+def get_roc_auc_score():
+    roc_auc_score = ''
+    if os.path.exists('./static/output/performance_evaluations.csv'):
+        roc_auc_score = pd.read_csv("./static/output/performance_evaluations.csv", usecols=['roc_auc']).values[0][0]
+
+    return roc_auc_score

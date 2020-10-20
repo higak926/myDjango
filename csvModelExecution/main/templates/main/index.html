@@ -23,30 +23,50 @@
     <div class="row">
       <div class="overview">
         <h2>ページ概要</h2>
-        <div class="col-6">
-          <p>複数のCSVデータをアップロードし、アップロードされたデータを基にロジスティック回帰モデルを構築・適用します。<br>
-            適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
-          </p>
-        </div>
-        <div class="col-6">
-          <div class="logistic-image">
+        <div class="row">
+          <div class="col-6">
+            <p>複数のCSVデータをアップロードし、アップロードされたデータを結合してロジスティック回帰モデルを構築・適用します。<br>
+              適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
+            </p>
+            <div class="contents">
+              <p>Contents</p>
+              <ol>
+                <a href="#t-upload">
+                  <li>ファイルのアップロード</li>
+                </a>
+                <a href="#t-join">
+                  <li>結合データファイルの作成</li>
+                </a>
+                <a href="#t-create">
+                  <li>モデルの構築・適用</li>
+                </a>
+                <a href="#t-result">
+                  <li>モデル適用結果</li>
+                </a>
+              </ol>
+            </div>
+          </div>
+          <div class="logistic-image img-fluid col-6">
             <img src="{% static 'logistic_reg.png' %}">
             <p>※ ロジスティック回帰 イメージ</p>
           </div>
         </div>
       </div>
     </div>
-    <div class="row">
+    <div class="row" id="t-upload">
       <div class="col-12">
-        <h3>ファイルのアップロード</h3>
+        <h3>1. ファイルのアップロード</h3>
       </div>
       <div class="col-6">
+        <p>下記枠内にて、ファイルの選択およびアップロードを実行します。<br>
+          アップロードされたファイル名は「◎アップロード済みファイル」から確認することができます。
+        </p>
         <form action="" method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="drop-zone" id="drop-zone">
             <p>ファイルをドラッグ＆ドロップもしくは</p>
             <input type="file" multiple="multiple" name="file" id="file-input">
-            <input type="submit" value="UPLOAD">
+            <input type="submit" id="btnUpload" value="UPLOAD" disabled="true">
           </div>
         </form>
       </div>
@@ -68,14 +88,17 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="t-join">
       <div class="col-12">
-        <h3>結合データファイルの作成</h3>
+        <h3>2. 結合データファイルの作成</h3>
         {% if file_list|length < 2 %}
         <p class="warning">結合対象のファイルをアップデートしてください</p>
         {% endif %}
       </div>
       <div class="col-6">
+        <p>「結合形式」と「出力項目の順序」を指定し、結合データファイルを作成します。<br>
+          作成されたファイル名は「◎結合データの出力ファイル」から確認することができます。
+        </p>
         <p style="font-weight: bold;">■ 結合形式の指定</p>
         <p>結合形式：<select name="join" form="join">
           <option value="inner-join">INNER JOIN</option>
@@ -99,7 +122,8 @@
           </p>
           {% endfor %}
         </div>
-        <button type="button" onclick="join_reset()" style="margin-bottom: 20px;">選択をリセット</button>
+        <button type="button" onclick="clickDefault()" style="margin: 10px 0;">デフォルトをセット</button>
+        <button type="button" onclick="join_reset()" style="margin-left: 20px; margin-bottom: 20px;">選択をリセット</button>
 
         <div class="warning">
           <p>{{order_warning}}</p>
@@ -118,14 +142,17 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="t-create">
       <div class="col-12">
-        <h3>モデルの構築・適用</h3>
+        <h3>3. モデルの構築・適用</h3>
         {% if join_file_list|length < 1 %}
         <p class="warning">モデル構築に使用する結合ファイルを作成してください</p>
         {% endif %}
       </div>
       <div class="col-6">
+        <p>「予測対象」、「結合形式」、「説明変数」を設定し、モデルの構築・適用を実行します。<br>
+          構築されたモデルデータのファイル名を「◎構築されたモデルデータ」、モデルの適用結果の出力ファイル名を「◎モデル適用結果」から確認することができます。
+        </p>
         <p style="font-weight: bold;">■ 予測対象の設定</p>
         <p>予測対象：「paid_flg」</p>
         <p style="font-weight: bold;">■ 結合形式の選択</p>
@@ -153,20 +180,23 @@
         </form>
       </div>
       <div class="col-6">
-        <h5>構築されたモデルのデータファイル</h5>
+        <h5>構築されたモデルデータ</h5>
         {% for file in model_result %}
         <p>{{file}}</p>
         {% endfor %}
-        <h5>モデル適用結果の出力ファイル</h5>
-        {% for file in model_result %}
+        <h5>モデル適用結果</h5>
+        {% for file in score_file %}
         <p>{{file}}</p>
         {% endfor %}
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="t-result">
       <div class="col-12">
-        <h3>モデル適用結果</h3>
+        <h3>4. モデル適用結果</h3>
+        <p>モデル適用結果を20分割されたヒストグラムにて表示します。<br>
+          適用結果は「ダウンロード」ボタンをクリックすることでタウンロードすることができます。
+        </p>
         {% if score_list_display|length < 1 %}
         <div class="warning">
           <p>モデルの構築・適用が完了するとヒストグラムが表示され、スコアをダウンロードすることができます</p>
@@ -174,9 +204,9 @@
         {% else %}
         <div class="result-graph">
           <img src="{% url 'plot' %}" width=600 height=600>
+          <p style="text-align: center;">roc_auc_score：<span style="background: #FFFF66;">{{roc_auc}}</span></p>
         </div>
         <a href="{% static 'output/score.csv' %}" , class="download-btn">ダウンロード</a>
-
 
         <div class="preview">
           <table class="table" border=1>
@@ -223,21 +253,49 @@
         this.style.background = '#ffffff';
     }, false);
 
-    fileInput.addEventListener('change', function () {
-        previewFile(this.files[0]);
-    });
-
     dropZone.addEventListener('drop', function(e) {
         e.stopPropagation();
         e.preventDefault();
         this.style.background = '#ffffff'; //背景色を白に戻す
         var files = e.dataTransfer.files; //ドロップしたファイルを取得
         fileInput.files = files; //inputのvalueをドラッグしたファイルに置き換える。
-        previewFile(files[0]);
+        selectFile();
     }, false);
+
+    function selectFile() {
+    console.log(fileInput.value)
+        if (fileInput.value === "") {
+          document.getElementById("btnUpload").disabled = true;
+        }
+        else {
+          document.getElementById("btnUpload").disabled = false;
+        }
+    }
 
     function join_reset() {
     	document.join.reset();
+    }
+
+    function clickDefault() {
+    	document.join.customer_id.selectedIndex = 1;
+    	document.join.contract_type.selectedIndex = 2;
+    	document.join.sex.selectedIndex = 3;
+    	document.join.age.selectedIndex = 4;
+    	document.join.pref.selectedIndex = 5;
+    	document.join.payway.selectedIndex = 6;
+    	document.join.identified_doc.selectedIndex = 7;
+    	document.join.career.selectedIndex = 8;
+    	document.join.domain.selectedIndex = 9;
+    	document.join.region.selectedIndex = 10;
+    	document.join.entry_age.selectedIndex = 11;
+    	document.join.selling_method.selectedIndex = 12;
+    	document.join.campaign.selectedIndex = 13;
+    	document.join.amount.selectedIndex = 14;
+    	document.join.paid_flg.selectedIndex = 15;
+    	document.join.customer_rank.selectedIndex = 16;
+    	document.join.arrears_at.selectedIndex = 17;
+    	document.join.arrears_count.selectedIndex = 18;
+    	document.join.bill_updage_count.selectedIndex = 19;
     }
 
     $(".item-order").on("change", function() {
@@ -261,6 +319,11 @@
             }
         });
     });
+
+
+
+
+
 
 
 
