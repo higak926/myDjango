@@ -26,16 +26,13 @@
         <div class="row">
           <div class="col-6">
             <p>複数のCSVデータをアップロードし、アップロードされたデータを結合してロジスティック回帰モデルを構築・適用します。<br>
-              適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、データスコアはCSVダウンロードすることが可能です。
+              適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、スコアをCSVダウンロードすることが可能です。
             </p>
             <div class="contents">
               <p>Contents</p>
               <ol>
                 <a href="#t-upload">
                   <li>ファイルのアップロード</li>
-                </a>
-                <a href="#t-join">
-                  <li>結合データファイルの作成</li>
                 </a>
                 <a href="#t-create">
                   <li>モデルの構築・適用</li>
@@ -56,11 +53,13 @@
     <div class="row" id="t-upload">
       <div class="col-12">
         <h3>1. ファイルのアップロード</h3>
+        <div class="beginning">
+          <p>下記枠内にて、ファイルの選択およびアップロードを実行します。<br>
+            アップロードされたファイル名は「◎アップロード済みファイル」から確認することができます。
+          </p>
+        </div>
       </div>
       <div class="col-6">
-        <p>下記枠内にて、ファイルの選択およびアップロードを実行します。<br>
-          アップロードされたファイル名は「◎アップロード済みファイル」から確認することができます。
-        </p>
         <form action="" method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="drop-zone" id="drop-zone">
@@ -72,7 +71,7 @@
       </div>
       <div class="col-6">
         <h5>アップロード済みファイル</h5>
-        {% if file_list|length > 1 %}
+        {% if file_list|length >= 1 %}
         {% for file in file_list %}
         <p>{{file}}</p>
         {% endfor %}
@@ -88,112 +87,85 @@
       </div>
     </div>
 
-    <div class="row" id="t-join">
-      <div class="col-12">
-        <h3>2. 結合データファイルの作成</h3>
-        {% if file_list|length < 2 %}
-        <p class="warning">結合対象のファイルをアップデートしてください</p>
-        {% endif %}
-      </div>
-      <div class="col-6">
-        <p>「結合形式」と「出力項目の順序」を指定し、結合データファイルを作成します。<br>
-          作成されたファイル名は「◎結合データの出力ファイル」から確認することができます。
-        </p>
-        <p style="font-weight: bold;">■ 結合形式の指定</p>
-        <p>結合形式：<select name="join" form="join">
-          <option value="inner-join">INNER JOIN</option>
-          <option value="left-join">LEFT JOIN</option>
-          <option value="outer-join">OUTER JOIN</option>
-        </select><br>
-          <span class="annotation">
-          ※ LEFT-JOINを選択した場合、「paid_flg」がNULLにならないようにするため<br>
-          「payment.csv」を軸として結合する
-          </span>
-        </p>
-        <p style="font-weight: bold;">■ 出力データ項目の順序指定</p>
-        <div class="item-order">
-          {% for item in item_list %}
-          <p>{{item}}<br>
-            <select name={{item}} form="join">
-              {% for order in order_list %}
-              <option value={{order}}>{{order}}</option>
-              {% endfor %}
-            </select>
-          </p>
-          {% endfor %}
-        </div>
-        <button type="button" onclick="clickDefault()" style="margin: 10px 0;">デフォルトをセット</button>
-        <button type="button" onclick="join_reset()" style="margin-left: 20px; margin-bottom: 20px;">選択をリセット</button>
-
-        <div class="warning">
-          <p>{{order_warning}}</p>
-        </div>
-
-        <form method="post" action="join" id="join" name="join">
-          {% csrf_token %}
-          <p><input type="submit" value="作成する"></p>
-        </form>
-      </div>
-      <div class="col-6">
-        <h5>結合データの出力ファイル</h5>
-        {% for file in join_file_list %}
-        <p>{{file}}</p>
-        {% endfor %}
-      </div>
-    </div>
-
     <div class="row" id="t-create">
       <div class="col-12">
-        <h3>3. モデルの構築・適用</h3>
-        {% if join_file_list|length < 1 %}
-        <p class="warning">モデル構築に使用する結合ファイルを作成してください</p>
-        {% endif %}
+        <h3>2. モデルの構築・適用</h3>
+        <div class="beginning">
+          <p>1.でアップロードされたファイルデータをもとに、「予測対象」、「結合形式」、「説明変数」を設定しモデルの構築・適用を実行します。</p>
+        </div>
       </div>
-      <div class="col-6">
-        <p>「予測対象」、「結合形式」、「説明変数」を設定し、モデルの構築・適用を実行します。<br>
-          構築されたモデルデータのファイル名を「◎構築されたモデルデータ」、モデルの適用結果の出力ファイル名を「◎モデル適用結果」から確認することができます。
-        </p>
-        <p style="font-weight: bold;">■ 予測対象の設定</p>
-        <p>予測対象：「paid_flg」</p>
-        <p style="font-weight: bold;">■ 結合形式の選択</p>
-        <p>結合形式：<select name="combined-format" form="model-create">
+      {% if file_check %}
+      <div class="col-12">
+        <div class="warning">
+          <p>モデル構築に必要なデータファイルをアップロードしてください</p>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-8">
+        <p><span style="font-weight: bold;">予測対象：</span>「paid_flg」</p>
+        <p><span style="font-weight: bold;">結合形式：</span><select name="combined-format" form="model_create">
           <option value="inner">inner_join</option>
           <option value="left">left_join</option>
-        </select></p>
+        </select><br>
+          <span style="font-size: small;">※ left-joinは「paid_flg」がNULLにならないよう「payment.csv」を軸として結合します</span>
+        </p>
 
-        <div class="explanatory-var">
-          <p style="font-weight: bold;">■ 説明変数の選択</p><br>
-          {% for var in explanatory_variable_list %}
-          <p>
-            <input type="checkbox" name={{var}} form="model-create" value={{var}}> {{var}}
-          </p>
-          {% endfor %}
+        <p><span style="font-weight: bold;">説明変数：</span></p>
+        <ul>
+          <li style="padding: 5px 0;">説明変数の候補は数値型の項目となります（下記参照）<br>
+            contract_type, age, payway, identified_doc, domain,
+            entry_age, amount, customer_rank, arrears_at, arrears_count, bill_updage_count
+          </li>
+          <li style="padding: 5px 0;">説明変数が1つ以上選択されていない場合、モデルは構築されません</li>
+          <li style="padding: 5px 0;">未選択より後の並び順に項目の選択がある場合、並び順は繰り上げられて処理されます<br>
+            例）1:未選択、2:age、3:domain、4:未選択、5:amount・・・ <br>
+            &emsp;&emsp;→ 1:age、2:domain、3:amount・・・
+          </li>
+        </ul>
+      </div>
+      <div class="col-4">
+        <div class="table-d">
+          <table>
+            <caption>説明変数の選択</caption>
+            <tr>
+              <th width="30%">並び順</th>
+              <th width="70%">項目</th>
+            </tr>
+            {% for var in explanatory_variable_list %}
+            <tr>
+              <td>
+                {{ forloop.counter }}
+              </td>
+              <td>
+                <div class="exp-var">
+                  <select name=array{{forloop.counter}} form="model_create" style="border: none; margin: 5px;">
+                    <option value="未選択">未選択</option>
+                    {% for var in explanatory_variable_list %}
+                    <option value={{var}}>{{var}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </table>
         </div>
 
-        <div class="warning">
+        <div class="warning" style="margin-top: 25px;">
           <p>{{choice_var_warning}}</p>
         </div>
-
-        <form method="post" action="model-create" id="model-create">
+        <form method="post" style="margin-top: 20px;" action="model_create" id="model_create" name="model_create">
           {% csrf_token %}
           <p><input type="submit" value="構築・適用する"></p>
         </form>
       </div>
-      <div class="col-6">
-        <h5>構築されたモデルデータ</h5>
-        {% for file in model_result %}
-        <p>{{file}}</p>
-        {% endfor %}
-        <h5>モデル適用結果</h5>
-        {% for file in score_file %}
-        <p>{{file}}</p>
-        {% endfor %}
-      </div>
+      {% endif %}
     </div>
+
 
     <div class="row" id="t-result">
       <div class="col-12">
-        <h3>4. モデル適用結果</h3>
+        <h3>3. モデル適用結果</h3>
         <p>モデル適用結果を20分割されたヒストグラムにて表示します。<br>
           適用結果は「ダウンロード」ボタンをクリックすることでタウンロードすることができます。
         </p>
@@ -204,12 +176,12 @@
         {% else %}
         <div class="result-graph">
           <img src="{% url 'plot' %}" width=600 height=600>
-          <p style="text-align: center;">roc_auc_score：<span style="background: #FFFF66;">{{roc_auc}}</span></p>
+          <p style="text-align: center;">auc：<span style="background: #FFFF66;">{{roc_auc}}</span></p>
         </div>
         <a href="{% static 'output/score.csv' %}" , class="download-btn">ダウンロード</a>
 
         <div class="preview">
-          <table class="table" border=1>
+          <table class="table-d" border=1>
             <caption>プレビュー</caption>
             <tr>
               <th>id</th>
@@ -272,9 +244,7 @@
         }
     }
 
-    function join_reset() {
-    	document.join.reset();
-    }
+
 
     function clickDefault() {
     	document.join.customer_id.selectedIndex = 1;
@@ -298,21 +268,21 @@
     	document.join.bill_updage_count.selectedIndex = 19;
     }
 
-    $(".item-order").on("change", function() {
+    $(".exp-var").on("change", function() {
 
         var selectedValues = [];
-        $(".item-order option:not([value='']):selected").each(function() {
+        $(".exp-var option:not([value='']):not([value='未選択']):selected").each(function() {
             var $opt = $(this);
             selectedValues.push($opt.val());
         });
 
-        $(".item-order option:not([value='']):not(:selected)").each(function() {
+        $(".exp-var option:not([value='']):not(:selected)").each(function() {
             var $opt = $(this);
             var val = $opt.val();
 
             // チェック対象のoptionのvalueが、selectedValuesに存在するものならdisabledにする
             // そうでないならdisabled解除
-            if ($.inArray(val, selectedValues) >= 0 && val != "未選択") {
+            if ($.inArray(val, selectedValues) >= 0 ) {
                 $opt.hide();
             } else {
                 $opt.show();
@@ -320,7 +290,9 @@
         });
     });
 
-
+    function exp_var_reset() {
+    	document.model_create.reset();
+    }
 
 
 

@@ -8,8 +8,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('insert', views.insert, name='insert'),
     path('delete', views.delete, name='delete'),
-    path('join', views.join, name='join'),
-    path('model-create', views.model_create, name='model-create'),
+    path('model_create', views.model_create, name='model_create'),
     path('plot', views.get_svg, name='plot'),
 ]
 

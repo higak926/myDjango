@@ -82,6 +82,10 @@ h5:before {
     font-size: small;
 }
 
+.beginning {
+    margin-bottom: 50px;
+}
+
 .drop-zone {
     border: 1px solid;
     padding: 30px;
@@ -100,9 +104,14 @@ h5:before {
     color: red;
 }
 
-.explanatory-var p {
-    display: inline-block;
-    width: 30%;
+.exp_var table {
+    border: solid 1px;
+    width: 100%;
+}
+
+.exp_var table th, td {
+    border: 1px solid gray;
+    text-align: center;
 }
 
 .result-graph {
@@ -120,10 +129,10 @@ h5:before {
     position: absolute;
     display: block;
     background: #ccffff;
-    width: 50%;
+    width: 40%;
     text-align: center;
     border: double 5px #4ec4d3;
-    margin-left: 25%;
+    margin-left: 30%;
     margin-top: 20px;
     margin-bottom: 10px;
     color: black;
@@ -131,26 +140,26 @@ h5:before {
 
 .preview {
     margin-top: 80px;
-    margin-left: 40%;
-}
-
-.table {
-    border-collapse: collapse;
     width: 30%;
+    margin-left: 35%;
 }
 
-.table caption {
+.table-d {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table-d caption {
     text-align: left;
     caption-side: top;
-    font-weight: bold;
     color: black;
 }
 
-.table th {
+.table-d th {
     background: #ccffff;
 }
 
-.table th, .table td {
+.table-d th, .table td {
     text-align: center;
     border: 1px solid gray;
 }
