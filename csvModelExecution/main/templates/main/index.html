@@ -24,9 +24,14 @@
       <div class="overview">
         <h2>ページ概要</h2>
         <div class="row">
-          <div class="col-6">
-            <p>複数のCSVデータをアップロードし、アップロードされたデータを結合してロジスティック回帰モデルを構築・適用します。<br>
-              適用されたデータのスコアは20分割されたヒストグラムとしてグラフに表示され、スコアをCSVダウンロードすることが可能です。
+          <div class="col-7">
+            <p>アップロードされた複数のCSVデータを結合し、モデルを構築・適用します。<br>
+              モデルのアルゴリズムは下記より選択できます。
+            <ul>
+              <li>ロジスティック回帰</li>
+              <li>ランダムフォレスト</li>
+            </ul>
+            適用結果はヒストグラムで表示され、CSVダウンロードすることが可能です。
             </p>
             <div class="contents">
               <p>Contents</p>
@@ -43,9 +48,11 @@
               </ol>
             </div>
           </div>
-          <div class="logistic-image img-fluid col-6">
+          <div class="algorithm-image img-fluid col-5">
             <img src="{% static 'logistic_reg.png' %}">
             <p>※ ロジスティック回帰 イメージ</p>
+            <img src="{% static 'random_forest.png' %}">
+            <p>※ ランダムフォレスト イメージ</p>
           </div>
         </div>
       </div>
@@ -91,7 +98,7 @@
       <div class="col-12">
         <h3>2. モデルの構築・適用</h3>
         <div class="beginning">
-          <p>1.でアップロードされたファイルデータをもとに、「予測対象」、「結合形式」、「説明変数」を設定しモデルの構築・適用を実行します。</p>
+          <p>1.&emsp;にてアップロードされたデータをもとに、「予測対象」、「結合形式」、「説明変数」を設定しモデルの構築・適用を実行します。</p>
         </div>
       </div>
       {% if file_check %}
@@ -101,64 +108,126 @@
         </div>
       </div>
       {% else %}
-      <div class="col-8">
-        <p><span style="font-weight: bold;">予測対象：</span>「paid_flg」</p>
-        <p><span style="font-weight: bold;">結合形式：</span><select name="combined-format" form="model_create">
+      <div class="col-12">
+          <p style="font-weight: bold; font-size: large;">Attention</p>
+          <ul>
+            <li style="padding: 5px 0;">予測対象は「paid_flg」固定とします</li>
+            <li style="padding: 5px 0;">結合形式でleft-joinを選択した場合、予測対象がNULLにならないよう「payment.csv」を軸として結合します</li>
+            <li style="padding: 5px 0;">説明変数が「未選択」より後の並び順で選択された場合、並び順が繰り上げられて処理されます<br>
+              例）1：「customer_id」、2：「domain」、3：「未選択」、4：「amount」・・・ <br>
+              &emsp;→ 1：「customer_id」、2：「domain」、3：「amount」・・・
+            </li>
+          </ul>
+        <p><span style="font-weight: bold;">予測対象　　：</span>「paid_flg」</p>
+        <p><span style="font-weight: bold;">結合形式　　：</span><select name="combined-format" form="model_create">
           <option value="inner">inner_join</option>
           <option value="left">left_join</option>
-        </select><br>
-          <span style="font-size: small;">※ left-joinは「paid_flg」がNULLにならないよう「payment.csv」を軸として結合します</span>
-        </p>
+        </select><br></p>
 
+        <p><span style="font-weight: bold;">アルゴリズム：</span><select name="algorithm" form="model_create">
+          <option value="logistic">logistic_regression</option>
+          <option value="random">random_forest</option>
+        </select>
         <p><span style="font-weight: bold;">説明変数：</span></p>
-        <ul>
-          <li style="padding: 5px 0;">説明変数の候補は数値型の項目となります（下記参照）<br>
-            contract_type, age, payway, identified_doc, domain,
-            entry_age, amount, customer_rank, arrears_at, arrears_count, bill_updage_count
-          </li>
-          <li style="padding: 5px 0;">説明変数が1つ以上選択されていない場合、モデルは構築されません</li>
-          <li style="padding: 5px 0;">未選択より後の並び順に項目の選択がある場合、並び順は繰り上げられて処理されます<br>
-            例）1:未選択、2:age、3:domain、4:未選択、5:amount・・・ <br>
-            &emsp;&emsp;→ 1:age、2:domain、3:amount・・・
-          </li>
-        </ul>
       </div>
       <div class="col-4">
-        <div class="table-d">
-          <table>
-            <caption>説明変数の選択</caption>
-            <tr>
-              <th width="30%">並び順</th>
-              <th width="70%">項目</th>
-            </tr>
-            {% for var in explanatory_variable_list %}
-            <tr>
-              <td>
-                {{ forloop.counter }}
-              </td>
-              <td>
-                <div class="exp-var">
-                  <select name=array{{forloop.counter}} form="model_create" style="border: none; margin: 5px;">
-                    <option value="未選択">未選択</option>
-                    {% for var in explanatory_variable_list %}
-                    <option value={{var}}>{{var}}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </table>
-        </div>
+        <table class="table-d">
+          <tr>
+            <th width="30%">並び順</th>
+            <th width="70%">項目</th>
+          </tr>
+          {% for var in explanatory_variable_list %}
+          {% if forloop.counter < 7 %}
+          <tr>
+            <td>
+              {{ forloop.counter }}
+            </td>
+            <td>
+              <div class="exp-var">
+                <select name=array{{forloop.counter}} form="model_create" style="border: none; margin: 5px;">
+                  {% if forloop.counter != 1 %}
+                  <option value="未選択">未選択</option>
+                  {% endif %}
+                  {% for var in explanatory_variable_list %}
+                  <option value={{var}}>{{var}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+      <div class="col-4">
+        <table class="table-d">
+          <tr>
+            <th width="30%">並び順</th>
+            <th width="70%">項目</th>
+          </tr>
+          {% for var in explanatory_variable_list %}
+          {% if 7 <= forloop.counter and forloop.counter < 13 %}
+          <tr>
+            <td>
+              {{ forloop.counter }}
+            </td>
+            <td>
+              <div class="exp-var">
+                <select name=array{{forloop.counter}} form="model_create" style="border: none; margin: 5px;">
+                  {% if forloop.counter != 1 %}
+                  <option value="未選択">未選択</option>
+                  {% endif %}
+                  {% for var in explanatory_variable_list %}
+                  <option value={{var}}>{{var}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+      <div class="col-4">
+        <table class="table-d">
+          <tr>
+            <th width="30%">並び順</th>
+            <th width="70%">項目</th>
+          </tr>
+          {% for var in explanatory_variable_list %}
+          {% if 13 <= forloop.counter %}
+          <tr>
+            <td>
+              {{ forloop.counter }}
+            </td>
+            <td>
+              <div class="exp-var">
+                <select name=array{{forloop.counter}} form="model_create" style="border: none; margin: 5px;">
+                  {% if forloop.counter != 1 %}
+                  <option value="未選択">未選択</option>
+                  {% endif %}
+                  {% for var in explanatory_variable_list %}
+                  <option value={{var}}>{{var}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </table>
+      </div>
 
-        <div class="warning" style="margin-top: 25px;">
-          <p>{{choice_var_warning}}</p>
-        </div>
+      <div class="col-12">
         <form method="post" style="margin-top: 20px;" action="model_create" id="model_create" name="model_create">
           {% csrf_token %}
           <p><input type="submit" value="構築・適用する"></p>
         </form>
+
+        <p><input type="button" style="margin-top: 20px;" value="すべて選択する" onclick="clickAll()">
+          <input type="button" style="margin-left: 20px;" value="選択をリセット" onclick="expVarReset()"></p>
       </div>
+
       {% endif %}
     </div>
 
@@ -244,28 +313,25 @@
         }
     }
 
-
-
-    function clickDefault() {
-    	document.join.customer_id.selectedIndex = 1;
-    	document.join.contract_type.selectedIndex = 2;
-    	document.join.sex.selectedIndex = 3;
-    	document.join.age.selectedIndex = 4;
-    	document.join.pref.selectedIndex = 5;
-    	document.join.payway.selectedIndex = 6;
-    	document.join.identified_doc.selectedIndex = 7;
-    	document.join.career.selectedIndex = 8;
-    	document.join.domain.selectedIndex = 9;
-    	document.join.region.selectedIndex = 10;
-    	document.join.entry_age.selectedIndex = 11;
-    	document.join.selling_method.selectedIndex = 12;
-    	document.join.campaign.selectedIndex = 13;
-    	document.join.amount.selectedIndex = 14;
-    	document.join.paid_flg.selectedIndex = 15;
-    	document.join.customer_rank.selectedIndex = 16;
-    	document.join.arrears_at.selectedIndex = 17;
-    	document.join.arrears_count.selectedIndex = 18;
-    	document.join.bill_updage_count.selectedIndex = 19;
+    function clickAll() {
+    	document.model_create.array1.selectedIndex = 0;
+    	document.model_create.array2.selectedIndex = 2;
+    	document.model_create.array3.selectedIndex = 3;
+    	document.model_create.array4.selectedIndex = 4;
+    	document.model_create.array5.selectedIndex = 5;
+    	document.model_create.array6.selectedIndex = 6;
+    	document.model_create.array7.selectedIndex = 7;
+    	document.model_create.array8.selectedIndex = 8;
+    	document.model_create.array9.selectedIndex = 9;
+    	document.model_create.array10.selectedIndex = 10;
+    	document.model_create.array11.selectedIndex = 11;
+    	document.model_create.array12.selectedIndex = 12;
+    	document.model_create.array13.selectedIndex = 13;
+    	document.model_create.array14.selectedIndex = 14;
+    	document.model_create.array15.selectedIndex = 15;
+    	document.model_create.array16.selectedIndex = 16;
+    	document.model_create.array17.selectedIndex = 17;
+    	document.model_create.array18.selectedIndex = 18;
     }
 
     $(".exp-var").on("change", function() {
@@ -290,9 +356,17 @@
         });
     });
 
-    function exp_var_reset() {
+    function expVarReset() {
     	document.model_create.reset();
     }
+
+
+
+
+
+
+
+
 
 
 

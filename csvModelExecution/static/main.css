@@ -62,6 +62,7 @@ h5:before {
 }
 
 .contents p {
+    margin-top: 60px;
     color: black;
     font-weight: bold;
     font-size: large;
@@ -73,17 +74,17 @@ h5:before {
     padding-bottom: 5px;
 }
 
-.logistic-image img {
+.algorithm-image img {
     width: 90%;
 }
 
-.logistic-image p {
+.algorithm-image p {
     text-align: left;
     font-size: small;
 }
 
 .beginning {
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 }
 
 .drop-zone {

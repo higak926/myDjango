@@ -9,6 +9,7 @@ import matplotlib
 
 # import japanize_matplotlib
 # バックエンドを指定
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
 matplotlib.use('Agg')
@@ -21,7 +22,6 @@ from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, r
 from django.shortcuts import render
 from .models import OtherInfo, Customer, Payment
 from . import views_list
-
 
 def index(request):
     if request.method == 'POST':
@@ -36,8 +36,6 @@ def index(request):
                 f.close()
     return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
                                                'file_check': views_list.file_check(),
-                                               'order_list': views_list.get_order_list(),
-                                               'item_list': views_list.get_item_list(),
                                                'join_file_list': views_list.get_join_file_list(),
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
@@ -91,8 +89,6 @@ def insert(request):
 
     return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
                                                'file_check': views_list.file_check(),
-                                               'order_list': views_list.get_order_list(),
-                                               'item_list': views_list.get_item_list(),
                                                'join_file_list': views_list.get_join_file_list(),
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
@@ -108,8 +104,6 @@ def delete(request):
 
     return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
                                                'file_check': views_list.file_check(),
-                                               'order_list': views_list.get_order_list(),
-                                               'item_list': views_list.get_item_list(),
                                                'join_file_list': views_list.get_join_file_list(),
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
@@ -121,8 +115,6 @@ def model_create(request):
     if not views_list.get_file_list():
         return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
                                                    'file_check': views_list.file_check(),
-                                                   'order_list': views_list.get_order_list(),
-                                                   'item_list': views_list.get_item_list(),
                                                    'join_file_list': views_list.get_join_file_list(),
                                                    'model_result': views_list.get_model_result(),
                                                    'score_file': views_list.get_score_file(),
@@ -204,27 +196,12 @@ def model_create(request):
         if request.POST[name] != '未選択':
             choice_variable_list.append(request.POST[name])
 
-    if not choice_variable_list:
-        choice_var_warning = '一つ以上の説明変数を選択してください'
-        return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
-                                                   'file_check': views_list.file_check(),
-                                                   'order_list': views_list.get_order_list(),
-                                                   'item_list': views_list.get_item_list(),
-                                                   'join_file_list': views_list.get_join_file_list(),
-                                                   'model_result': views_list.get_model_result(),
-                                                   'score_file': views_list.get_score_file(),
-                                                   'explanatory_variable_list': views_list.get_explanatory_variable_list(),
-                                                   'choice_var_warning': choice_var_warning,
-                                                   'score_list_display': views_list.get_score_list_display(),
-                                                   'roc_auc': views_list.get_roc_auc_score()})
-
     ex_var_list = []
     column_list = df.columns.tolist()
     for choice_column in choice_variable_list:
         for column in column_list:
-            if choice_column in column:
+            if choice_column in column and len(column) - len(choice_column) <= 3:
                 ex_var_list.append(column)
-
     warnings.simplefilter('ignore')
     imr = SimpleImputer(missing_values=pd.np.nan, strategy='most_frequent')
     x1 = imr.fit_transform(df[ex_var_list])
@@ -240,18 +217,26 @@ def model_create(request):
     y1_train_reault.to_csv('./static/output/data/y1_train.csv')
     y1_test_reault.to_csv('./static/output/data/y1_test.csv')
 
-    # lr = LogisticRegression(C=, penalty=) ハイパーパラメータ
-    lr = LogisticRegression()
-    lr.fit(x1_train, y1_train)
-    coefficient = lr.coef_
-    intercept = lr.intercept_
-    model_data_list = [[coefficient, intercept]]
-    model_datas = pd.DataFrame(model_data_list, columns=['coefficient', 'intercept'])
-    model_datas.to_csv('./static/output/model_data.csv')
+    algorithm_format = request.POST['algorithm']
+    if algorithm_format == 'logistic':
+        model = LogisticRegression(C=1000, penalty='l1', solver='liblinear')
+        model.fit(x1_train, y1_train)
+        coefficient = model.coef_
+        intercept = model.intercept_
+        model_data_list = [[coefficient, intercept]]
+        model_datas = pd.DataFrame(model_data_list, columns=['coefficient', 'intercept'])
+        model_datas.to_csv('./static/output/logisticRegression_model_data.csv')
+    elif algorithm_format == 'random':
+        model = RandomForestClassifier(max_depth=30, n_estimators=50, random_state=0)
+        model.fit(x1_train, y1_train)
+        importance = model.feature_importances_
+        train_columns = x1_train_reault.columns.tolist()
+        model_datas = pd.DataFrame({'column_name': train_columns, 'importance': importance})
+        model_datas.to_csv('./static/output/randomForest_model_data.csv')
 
-    y1_pred = lr.predict(x1_test)
-    prob_csv = lr.predict_proba(x1_test)[:, 1].tolist()
-    prob = lr.predict_proba(x1_test)[:, 1].round(3).tolist()
+    y1_pred = model.predict(x1_test)
+    prob_csv = model.predict_proba(x1_test)[:, 1].tolist()
+    prob = model.predict_proba(x1_test)[:, 1].round(3).tolist()
     score_pd = pd.DataFrame(prob_csv, columns=['score'])
     score_pd.to_csv('./static/output/score.csv')
 
@@ -280,8 +265,6 @@ def model_create(request):
 
     return render(request, 'main/index.html', {'file_list': views_list.get_file_list(),
                                                'file_check': views_list.file_check(),
-                                               'order_list': views_list.get_order_list(),
-                                               'item_list': views_list.get_item_list(),
                                                'join_file_list': views_list.get_join_file_list(),
                                                'model_result': views_list.get_model_result(),
                                                'score_file': views_list.get_score_file(),
