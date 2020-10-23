@@ -24,14 +24,16 @@
       <div class="overview">
         <h2>ページ概要</h2>
         <div class="row">
-          <div class="col-7">
-            <p>アップロードされた複数のCSVデータを結合し、モデルを構築・適用します。<br>
+          <div class="col-6">
+            <p>アップロードされた複数のCSVデータより、モデルを構築・適用します。<br>
               モデルのアルゴリズムは下記より選択できます。
             <ul>
               <li>ロジスティック回帰</li>
+              <li>ニューラルネットワーク</li>
               <li>ランダムフォレスト</li>
             </ul>
-            適用結果はヒストグラムで表示され、CSVダウンロードすることが可能です。
+            適用結果はヒストグラムで表示されます。<br>
+            また、適用結果をCSVダウンロードすることができます。
             </p>
             <div class="contents">
               <p>Contents</p>
@@ -48,12 +50,24 @@
               </ol>
             </div>
           </div>
-          <div class="algorithm-image img-fluid col-5">
+          <div class="algorithm-image img-fluid col-6">
+        <div class="row">
+          <div class="col-6">
             <img src="{% static 'logistic_reg.png' %}">
             <p>※ ロジスティック回帰 イメージ</p>
-            <img src="{% static 'random_forest.png' %}">
+          </div>
+          <div class="col-6">
+            <img src="{% static 'neural_network.png' %}">
+            <p>※ ニューラルネットワーク イメージ</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12" style="margin-left: 15%;">
+            <img src="{% static 'random_forest.png' %}"  style="width: 70%;">
             <p>※ ランダムフォレスト イメージ</p>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>
@@ -126,6 +140,7 @@
 
         <p><span style="font-weight: bold;">アルゴリズム：</span><select name="algorithm" form="model_create">
           <option value="logistic">logistic_regression</option>
+          <option value="neural">neural_network</option>
           <option value="random">random_forest</option>
         </select>
         <p><span style="font-weight: bold;">説明変数：</span></p>

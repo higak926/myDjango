@@ -11,6 +11,7 @@ import matplotlib
 # バックエンドを指定
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
+from sklearn.neural_network import MLPClassifier
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -226,8 +227,15 @@ def model_create(request):
         model_data_list = [[coefficient, intercept]]
         model_datas = pd.DataFrame(model_data_list, columns=['coefficient', 'intercept'])
         model_datas.to_csv('./static/output/logisticRegression_model_data.csv')
+    elif algorithm_format == 'neural':
+        model = MLPClassifier(solver="sgd", random_state=0, max_iter=100)
+        model.fit(x1_train, y1_train)
+        coefficient = model.coefs_
+        intercept = model.intercepts_
+        model_datas = pd.DataFrame({'coefficient': coefficient, 'intercept': intercept})
+        model_datas.to_csv('./static/output/neuralNetwork_model_data.csv')
     elif algorithm_format == 'random':
-        model = RandomForestClassifier(max_depth=30, n_estimators=50, random_state=0)
+        model = RandomForestClassifier(max_depth=3, n_estimators=50, random_state=0)
         model.fit(x1_train, y1_train)
         importance = model.feature_importances_
         train_columns = x1_train_reault.columns.tolist()
